@@ -147,6 +147,7 @@ const companyIsOnline = onlineUsers.some(
 
           <button
             type="button"
+            className="customer-chat__logout"
             onClick={handleLogout}
           >
             Esci

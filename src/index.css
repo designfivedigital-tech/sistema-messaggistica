@@ -3183,3 +3183,493 @@ main:not(.company-layout):not(.customer-chat__body) {
 .push-notification-card__button--test:hover:not(:disabled) {
   background: #f3f4f6;
 }
+
+
+/* =========================================================
+   FIVE DIGITAL - COLORI E RESPONSIVE CHAT
+   ========================================================= */
+
+:root {
+  --five-pink: #e20074;
+  --five-pink-dark: #b9005f;
+  --five-black: #000000;
+  --five-white: #ffffff;
+  --five-background: #f6f6f8;
+  --five-border: #e5e5e7;
+  --five-muted: #6b7280;
+}
+
+/* =========================================================
+   COLORI FIVE DIGITAL
+   ========================================================= */
+
+.customer-chat,
+.company-dashboard {
+  background: var(--five-background);
+}
+
+.customer-chat__avatar,
+.company-chat-panel__avatar,
+.conversation-item__avatar {
+  background: var(--five-black);
+  color: var(--five-white);
+}
+
+.customer-chat__header h1,
+.company-header h1,
+.company-chat-panel__header h2 {
+  color: var(--five-black);
+}
+
+.typing-indicator,
+.customer-chat .typing-indicator,
+.company-dashboard .typing-indicator {
+  color: var(--five-pink) !important;
+}
+
+.message-composer textarea:focus {
+  border-color: var(--five-pink);
+  box-shadow: 0 0 0 4px rgba(226, 0, 116, 0.12);
+}
+
+.message-composer__send {
+  background: var(--five-pink);
+  color: var(--five-white);
+  box-shadow: 0 6px 18px rgba(226, 0, 116, 0.24);
+}
+
+.message-composer__send:hover:not(:disabled) {
+  background: var(--five-pink-dark);
+  box-shadow: 0 9px 22px rgba(226, 0, 116, 0.3);
+}
+
+.message-composer__attach:hover:not(:disabled),
+.message-composer__emoji-button:hover:not(:disabled),
+.message-composer__emoji-button[aria-expanded="true"] {
+  border-color: var(--five-pink);
+  background: rgba(226, 0, 116, 0.06);
+  color: var(--five-pink);
+}
+
+.message-row--own .message-bubble {
+  border-color: var(--five-black);
+  background: var(--five-black);
+  color: var(--five-white);
+}
+
+.message-reactions__item--active,
+.message-reaction-action__trigger--active {
+  border-color: rgba(226, 0, 116, 0.4);
+  background: rgba(226, 0, 116, 0.08);
+  color: var(--five-pink);
+}
+
+.conversation-item__badge {
+  background: var(--five-pink);
+  box-shadow: 0 3px 8px rgba(226, 0, 116, 0.25);
+}
+
+.conversation-item--selected {
+  box-shadow: inset 4px 0 0 var(--five-pink);
+}
+
+/* =========================================================
+   CORREZIONE STRUTTURA COMPOSER
+   ========================================================= */
+
+.message-composer {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message-composer__controls {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.message-composer__field {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.message-composer textarea {
+  width: 100%;
+  min-width: 0;
+}
+
+.message-composer__hint,
+.message-composer__error {
+  width: 100%;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+  .customer-chat__header {
+    min-height: 80px;
+    flex-basis: 80px;
+    padding: 12px 18px;
+  }
+
+  .customer-chat__avatar {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+
+  .customer-chat__header h1 {
+    max-width: 280px;
+    font-size: 1.05rem;
+  }
+
+  .customer-chat__actions {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .customer-chat__actions .push-notification-card {
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  .customer-chat__actions
+    .push-notification-card__button {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+
+  .customer-chat__logout {
+    min-height: 40px !important;
+    padding: 0 14px !important;
+  }
+
+  .message-list {
+    padding: 18px 18px 22px;
+  }
+
+  .message-content {
+    max-width: 82%;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 760px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .customer-chat {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .customer-chat__header {
+    min-height: 68px;
+    flex: 0 0 68px;
+    gap: 8px;
+    padding:
+      max(8px, env(safe-area-inset-top))
+      10px
+      8px;
+  }
+
+  .customer-chat__identity {
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: 9px;
+  }
+
+  .customer-chat__avatar {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    font-size: 1rem;
+  }
+
+  .customer-chat__identity > div:last-child {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .customer-chat__header h1 {
+    max-width: 100%;
+    margin: 1px 0;
+    overflow: hidden;
+    font-size: 0.98rem;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .customer-chat__header
+    .customer-chat__identity
+    > div:last-child
+    > span {
+    font-size: 0.7rem;
+  }
+
+  .customer-chat__header .presence-status,
+  .customer-chat__header .typing-indicator {
+    min-height: 16px;
+    font-size: 0.7rem;
+  }
+
+  .customer-chat__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /*
+   * Nasconde il pulsante di test nella normale interfaccia mobile.
+   * Resta utilizzabile da desktop durante lo sviluppo.
+   */
+  .customer-chat__actions
+    .push-notification-card__button--test {
+    display: none;
+  }
+
+  .customer-chat__actions
+    .push-notification-card {
+    width: auto;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .customer-chat__actions
+    .push-notification-card__actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+
+  .customer-chat__actions
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    ) {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    color: transparent;
+    font-size: 0;
+  }
+
+  .customer-chat__actions
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    )::before {
+    color: var(--five-black);
+    content: "🔔";
+    font-size: 1rem;
+  }
+
+  .customer-chat__actions
+    .push-notification-card__message {
+    display: none;
+  }
+
+  .customer-chat__logout {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px !important;
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 50% !important;
+    color: transparent;
+    font-size: 0;
+  }
+
+  .customer-chat__logout::before {
+    color: var(--five-black);
+    content: "↪";
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  .customer-chat__body {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .message-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    padding: 10px 8px 16px;
+    overscroll-behavior-y: contain;
+  }
+
+  .message-row {
+    width: 100%;
+    gap: 4px;
+  }
+
+  .message-content {
+    max-width: calc(100% - 62px);
+  }
+
+  .message-bubble {
+    max-width: 100%;
+    padding: 10px 12px 8px;
+  }
+
+  .message-bubble p {
+    font-size: 0.94rem;
+    line-height: 1.4;
+  }
+
+  .message-composer {
+    flex: 0 0 auto;
+    gap: 7px;
+    padding:
+      8px
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+  }
+
+  .message-composer__controls {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .message-composer__attach,
+  .message-composer__emoji-button {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 13px;
+  }
+
+  .message-composer__field {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .message-composer textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    max-height: 110px;
+    padding: 10px 39px 9px 13px;
+    border-radius: 14px;
+    font-size: 16px;
+    line-height: 1.35;
+  }
+
+  .message-composer__send {
+    width: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    flex: 0 0 42px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .message-composer__send-icon {
+    font-size: 1.05rem;
+  }
+
+  .message-composer__hint {
+    display: none;
+  }
+
+  .message-search {
+    padding: 7px 8px 1px;
+  }
+
+  .message-search__open {
+    width: 38px;
+    min-height: 38px;
+  }
+
+  .message-reply-button,
+  .message-reaction-action__trigger,
+  .message-actions__trigger {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+    font-size: 0.84rem;
+  }
+}
+
+/* =========================================================
+   SMARTPHONE MOLTO PICCOLI
+   ========================================================= */
+
+@media (max-width: 390px) {
+  .customer-chat__header {
+    padding-right: 7px;
+    padding-left: 7px;
+  }
+
+  .customer-chat__avatar {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .customer-chat__header h1 {
+    font-size: 0.9rem;
+  }
+
+  .customer-chat__actions
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    ),
+  .customer-chat__logout {
+    width: 36px;
+    min-width: 36px;
+    min-height: 36px !important;
+  }
+
+  .message-composer {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .message-composer__controls {
+    gap: 5px;
+  }
+
+  .message-composer__attach,
+  .message-composer__emoji-button,
+  .message-composer__send {
+    width: 39px;
+    height: 39px;
+    min-width: 39px;
+    min-height: 39px;
+    flex-basis: 39px;
+  }
+
+  .message-composer textarea {
+    min-height: 39px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
