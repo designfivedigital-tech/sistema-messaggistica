@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "@supabase/functions-js/edge-runtime.d.ts": "jsr:@supabase/functions-js/edge-runtime.d.ts",
+    "@supabase/server": "npm:@supabase/server",
+    "web-push": "npm:web-push@3.6.7"
+  },
+  "compilerOptions": {
+    "strict": true
+  }
+}
