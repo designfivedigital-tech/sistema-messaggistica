@@ -3673,3 +3673,173 @@ main:not(.company-layout):not(.customer-chat__body) {
     padding-bottom: 8px;
   }
 }
+
+/* =========================================================
+   DASHBOARD AZIENDA - NAVIGAZIONE MOBILE
+   ========================================================= */
+
+.company-chat-panel__back {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .company-dashboard {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .company-header {
+    flex: 0 0 auto;
+  }
+
+  .company-layout {
+    position: relative;
+    display: block;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .company-sidebar,
+  .company-chat-panel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    transition:
+      transform 220ms ease,
+      visibility 220ms ease;
+  }
+
+  /*
+   * Stato iniziale:
+   * elenco conversazioni visibile.
+   */
+  .company-layout--list-open
+    .company-sidebar {
+    visibility: visible;
+    transform: translateX(0);
+  }
+
+  .company-layout--list-open
+    .company-chat-panel {
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(100%);
+  }
+
+  /*
+   * Stato chat:
+   * pannello conversazione visibile.
+   */
+  .company-layout--chat-open
+    .company-sidebar {
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-30%);
+  }
+
+  .company-layout--chat-open
+    .company-chat-panel {
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .company-sidebar {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .company-sidebar__header {
+    flex: 0 0 auto;
+  }
+
+  .conversation-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+
+  .company-chat-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .company-chat-panel__header {
+    display: flex;
+    min-height: 66px;
+    flex: 0 0 66px;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+  }
+
+  .company-chat-panel__back {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #e5e5e7;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #000000;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .company-chat-panel__back:active {
+    transform: scale(0.95);
+  }
+
+  .company-chat-panel__avatar {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+  }
+
+  .company-chat-panel__header > div:last-child {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .company-chat-panel__header h2 {
+    overflow: hidden;
+    font-size: 1rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .company-chat-panel__messages {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .company-chat-panel__messages
+    .message-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  .company-chat-panel__messages
+    .message-composer {
+    flex: 0 0 auto;
+  }
+}

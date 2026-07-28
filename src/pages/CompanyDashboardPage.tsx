@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
 import { logoutUser } from "../features/auth/authService";
@@ -15,8 +15,12 @@ import { useMessagesRealtime } from "../features/messages/useMessagesRealtime";
 import { useMarkMessagesRead } from "../features/messages/useMarkMessagesRead";
 import { useConversationStore } from "../stores/conversationStore";
 
+
+
 export default function CompanyDashboardPage() {
   const navigate = useNavigate();
+  const [isMobileChatOpen, setIsMobileChatOpen] =
+    useState(false);
 
   const { user } = useAuth();
   const { data: profile } = useProfile();
@@ -101,6 +105,17 @@ const {
     selectedConversationId,
     selectConversation,
   ]);
+
+    function handleSelectConversation(
+    conversationId: string,
+  ) {
+    selectConversation(conversationId);
+    setIsMobileChatOpen(true);
+  }
+
+  function handleMobileBack() {
+    setIsMobileChatOpen(false);
+  }
 
   async function handleLogout() {
     try {
@@ -194,7 +209,14 @@ const customerIsOnline = onlineUsers.some(
         </div>
       </header>
 
-      <main className="company-layout">
+      <main
+        className={[
+          "company-layout",
+          isMobileChatOpen
+            ? "company-layout--chat-open"
+            : "company-layout--list-open",
+        ].join(" ")}
+      >
         <aside className="company-sidebar">
           <div className="company-sidebar__header">
             <div>
@@ -255,7 +277,7 @@ const customerIsOnline = onlineUsers.some(
               selectedConversationId={
                 selectedConversationId
               }
-              onSelect={selectConversation}
+              onSelect={handleSelectConversation}
             />
           )}
         </aside>
@@ -264,6 +286,15 @@ const customerIsOnline = onlineUsers.some(
           {selectedConversation ? (
             <>
               <header className="company-chat-panel__header">
+                <button
+                type="button"
+                className="company-chat-panel__back"
+                onClick={handleMobileBack}
+                aria-label="Torna alle conversazioni"
+                title="Torna alle conversazioni"
+              >
+                ←
+              </button>
                 <div className="company-chat-panel__avatar">
                   {selectedConversation.customer.display_name
                     .trim()
