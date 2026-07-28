@@ -132,14 +132,13 @@ function isUuid(
 
 function normalizeRelativeUrl(
   value: string | null,
-  conversationId: string | null,
+  recipientUserId: string,
+  companyUserId: string,
 ): string {
   const fallback =
-    conversationId
-      ? `/conversations/${encodeURIComponent(
-          conversationId,
-        )}`
-      : "/";
+    recipientUserId === companyUserId
+      ? "/azienda"
+      : "/chat";
 
   if (!value) {
     return fallback;
@@ -941,10 +940,11 @@ export default {
           );
 
         const url =
-          normalizeRelativeUrl(
-            input.url ?? null,
-            conversationId,
-          );
+        normalizeRelativeUrl(
+          input.url ?? null,
+          recipientUserId,
+          companyUserId,
+        );
 
         const payload =
           JSON.stringify({
