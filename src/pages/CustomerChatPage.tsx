@@ -10,6 +10,8 @@ import { useMessages } from "../features/messages/useMessages";
 import { useMessagesRealtime } from "../features/messages/useMessagesRealtime";
 import { useConversationStore } from "../stores/conversationStore";
 import { useTypingPresence } from "../features/messages/useTypingPresence";
+import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
+
 
 export default function CustomerChatPage() {
   const navigate = useNavigate();
@@ -140,12 +142,16 @@ const companyIsOnline = onlineUsers.some(
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleLogout}
-        >
-          Esci
-        </button>
+        <div className="customer-chat__actions">
+          <PushNotificationButton />
+
+          <button
+            type="button"
+            onClick={handleLogout}
+          >
+            Esci
+          </button>
+        </div>
       </header>
 
       <main className="customer-chat__body">
