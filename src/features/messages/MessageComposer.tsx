@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -24,8 +25,14 @@ type MessageComposerProps = {
   ) => void | Promise<void>;
 };
 
+type FilePreview = {
+  file: File;
+  previewUrl: string | null;
+};
+
 const MAX_MESSAGE_LENGTH = 5000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILES_PER_MESSAGE = 10;
 
 const ACCEPTED_FILE_TYPES = [
   "image/jpeg",
@@ -43,7 +50,6 @@ const ACCEPTED_FILE_TYPES = [
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ].join(",");
-
 
 const EMOJIS = [
   "😀", "😃", "😄", "😁", "😊", "😉", "😍", "🥰",
@@ -64,7 +70,10 @@ function formatFileSize(bytes: number) {
     return `${(bytes / 1024).toFixed(1)} KB`;
   }
 
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(
+    bytes /
+    (1024 * 1024)
+  ).toFixed(1)} MB`;
 }
 
 function getFileIcon(file: File) {
@@ -104,25 +113,49 @@ function getFileIcon(file: File) {
   return "📎";
 }
 
+function getFileIdentifier(file: File) {
+  return [
+    file.name,
+    file.size,
+    file.lastModified,
+  ].join("-");
+}
+
 export default function MessageComposer({
   conversationId,
   senderId,
   onTypingChange,
 }: MessageComposerProps) {
   const [body, setBody] = useState("");
-  const [selectedFile, setSelectedFile] =
-    useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] =
-    useState<string | null>(null);
+
+  const [selectedFiles, setSelectedFiles] =
+    useState<File[]>([]);
+
   const [fileError, setFileError] =
     useState<string | null>(null);
-  const [isEmojiPickerOpen, setIsEmojiPickerOpen] =
-    useState(false);
-  const [isDraggingFile, setIsDraggingFile] =
-  useState(false);
-  const [uploadProgress, setUploadProgress] =
-  useState<number | null>(null);
 
+  const [
+    isEmojiPickerOpen,
+    setIsEmojiPickerOpen,
+  ] = useState(false);
+
+  const [isDraggingFile, setIsDraggingFile] =
+    useState(false);
+
+  const [
+    uploadProgress,
+    setUploadProgress,
+  ] = useState<number | null>(null);
+
+  const [
+    completedUploadFiles,
+    setCompletedUploadFiles,
+  ] = useState(0);
+
+  const [
+    totalUploadFiles,
+    setTotalUploadFiles,
+  ] = useState(0);
 
   const textareaRef =
     useRef<HTMLTextAreaElement | null>(null);
@@ -144,7 +177,9 @@ export default function MessageComposer({
   const isTypingRef = useRef(false);
   const dragCounterRef = useRef(0);
 
-  const sendMessageMutation = useSendMessage();
+  const sendMessageMutation =
+    useSendMessage();
+
   const sendAttachmentMutation =
     useSendAttachment();
 
@@ -157,7 +192,8 @@ export default function MessageComposer({
   );
 
   const activeReplyMessage =
-    replyMessage?.conversationId === conversationId
+    replyMessage?.conversationId ===
+    conversationId
       ? replyMessage
       : null;
 
@@ -171,8 +207,33 @@ export default function MessageComposer({
   const canSend =
     Boolean(senderId) &&
     !isSending &&
-    (Boolean(body.trim()) ||
-      Boolean(selectedFile));
+    (
+      Boolean(body.trim()) ||
+      selectedFiles.length > 0
+    );
+
+  const filePreviews =
+    useMemo<FilePreview[]>(() => {
+      return selectedFiles.map((file) => ({
+        file,
+        previewUrl:
+          file.type.startsWith("image/")
+            ? URL.createObjectURL(file)
+            : null,
+      }));
+    }, [selectedFiles]);
+
+  useEffect(() => {
+    return () => {
+      filePreviews.forEach((preview) => {
+        if (preview.previewUrl) {
+          URL.revokeObjectURL(
+            preview.previewUrl,
+          );
+        }
+      });
+    };
+  }, [filePreviews]);
 
   function resizeTextarea() {
     const textarea = textareaRef.current;
@@ -189,14 +250,23 @@ export default function MessageComposer({
   }
 
   function stopTypingTimer() {
-    if (typingTimerRef.current) {
-      clearTimeout(typingTimerRef.current);
-      typingTimerRef.current = null;
+    if (!typingTimerRef.current) {
+      return;
     }
+
+    clearTimeout(
+      typingTimerRef.current,
+    );
+
+    typingTimerRef.current = null;
   }
 
-  function notifyTyping(isTyping: boolean) {
-    if (isTypingRef.current === isTyping) {
+  function notifyTyping(
+    isTyping: boolean,
+  ) {
+    if (
+      isTypingRef.current === isTyping
+    ) {
       return;
     }
 
@@ -207,9 +277,10 @@ export default function MessageComposer({
   function scheduleTypingStop() {
     stopTypingTimer();
 
-    typingTimerRef.current = setTimeout(() => {
-      notifyTyping(false);
-    }, 1800);
+    typingTimerRef.current =
+      setTimeout(() => {
+        notifyTyping(false);
+      }, 1800);
   }
 
   function handleCancelReply() {
@@ -220,8 +291,29 @@ export default function MessageComposer({
     });
   }
 
-  function clearSelectedFile() {
-    setSelectedFile(null);
+  function clearSelectedFiles() {
+    setSelectedFiles([]);
+    setFileError(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function removeSelectedFile(
+    fileToRemove: File,
+  ) {
+    const identifier =
+      getFileIdentifier(fileToRemove);
+
+    setSelectedFiles((currentFiles) =>
+      currentFiles.filter(
+        (file) =>
+          getFileIdentifier(file) !==
+          identifier,
+      ),
+    );
+
     setFileError(null);
 
     if (fileInputRef.current) {
@@ -232,9 +324,14 @@ export default function MessageComposer({
   function resetComposer() {
     setBody("");
     setIsEmojiPickerOpen(false);
-    clearSelectedFile();
+
+    clearSelectedFiles();
     clearReplyMessage();
+
     setUploadProgress(null);
+    setCompletedUploadFiles(0);
+    setTotalUploadFiles(0);
+
     requestAnimationFrame(() => {
       resizeTextarea();
       textareaRef.current?.focus();
@@ -251,20 +348,32 @@ export default function MessageComposer({
       return;
     }
 
-    setIsEmojiPickerOpen((current) => !current);
+    setIsEmojiPickerOpen(
+      (current) => !current,
+    );
   }
 
   function insertEmoji(emoji: string) {
-    const textarea = textareaRef.current;
-    const selectionStart = textarea?.selectionStart ?? body.length;
-    const selectionEnd = textarea?.selectionEnd ?? body.length;
+    const textarea =
+      textareaRef.current;
+
+    const selectionStart =
+      textarea?.selectionStart ??
+      body.length;
+
+    const selectionEnd =
+      textarea?.selectionEnd ??
+      body.length;
 
     const nextBody =
       body.slice(0, selectionStart) +
       emoji +
       body.slice(selectionEnd);
 
-    if (nextBody.length > MAX_MESSAGE_LENGTH) {
+    if (
+      nextBody.length >
+      MAX_MESSAGE_LENGTH
+    ) {
       return;
     }
 
@@ -277,6 +386,7 @@ export default function MessageComposer({
         selectionStart + emoji.length;
 
       textareaRef.current?.focus();
+
       textareaRef.current?.setSelectionRange(
         nextCursorPosition,
         nextCursorPosition,
@@ -284,59 +394,119 @@ export default function MessageComposer({
     });
   }
 
-  function validateSelectedFile(file: File) {
+  function validateSelectedFile(
+    file: File,
+  ) {
     if (file.size <= 0) {
-      return "Il file selezionato è vuoto.";
+      return `Il file "${file.name}" è vuoto.`;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return "Il file supera il limite massimo di 10 MB.";
+      return `Il file "${file.name}" supera il limite massimo di 10 MB.`;
     }
 
     const acceptedTypes =
       ACCEPTED_FILE_TYPES.split(",");
 
-    if (!acceptedTypes.includes(file.type)) {
-      return "Questo tipo di file non è supportato.";
+    if (
+      !acceptedTypes.includes(file.type)
+    ) {
+      return `Il tipo del file "${file.name}" non è supportato.`;
     }
 
     return null;
   }
 
-  function selectFile(file: File) {
-  setFileError(null);
+  function addSelectedFiles(
+    incomingFiles: File[],
+  ) {
+    setFileError(null);
 
-  const validationError =
-    validateSelectedFile(file);
+    if (incomingFiles.length === 0) {
+      return;
+    }
 
-  if (validationError) {
-    setSelectedFile(null);
-    setFileError(validationError);
+    const validationError =
+      incomingFiles
+        .map(validateSelectedFile)
+        .find(Boolean);
+
+    if (validationError) {
+      setFileError(validationError);
+      return;
+    }
+
+    setSelectedFiles((currentFiles) => {
+      const existingIdentifiers =
+        new Set(
+          currentFiles.map(
+            getFileIdentifier,
+          ),
+        );
+
+      const uniqueNewFiles =
+        incomingFiles.filter(
+          (file) =>
+            !existingIdentifiers.has(
+              getFileIdentifier(file),
+            ),
+        );
+
+      const availableSlots =
+        MAX_FILES_PER_MESSAGE -
+        currentFiles.length;
+
+      if (availableSlots <= 0) {
+        setFileError(
+          "Puoi allegare al massimo 10 file per messaggio.",
+        );
+
+        return currentFiles;
+      }
+
+      if (
+        uniqueNewFiles.length >
+        availableSlots
+      ) {
+        setFileError(
+          `Puoi aggiungere ancora ${availableSlots} ${
+            availableSlots === 1
+              ? "file"
+              : "file"
+          }. Il limite è di 10 allegati per messaggio.`,
+        );
+      }
+
+      return [
+        ...currentFiles,
+        ...uniqueNewFiles.slice(
+          0,
+          availableSlots,
+        ),
+      ];
+    });
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
 
-    return;
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
   }
-
-  setSelectedFile(file);
-
-  requestAnimationFrame(() => {
-    textareaRef.current?.focus();
-  });
-}
 
   useEffect(() => {
     resizeTextarea();
   }, [body]);
 
   useEffect(() => {
-    if (activeReplyMessage) {
-      requestAnimationFrame(() => {
-        textareaRef.current?.focus();
-      });
+    if (!activeReplyMessage) {
+      return;
     }
+
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+    });
   }, [activeReplyMessage]);
 
   useEffect(() => {
@@ -344,7 +514,9 @@ export default function MessageComposer({
       return;
     }
 
-    function handleDocumentPointerDown(event: PointerEvent) {
+    function handleDocumentPointerDown(
+      event: PointerEvent,
+    ) {
       const target = event.target;
 
       if (!(target instanceof Node)) {
@@ -352,8 +524,12 @@ export default function MessageComposer({
       }
 
       if (
-        emojiPickerRef.current?.contains(target) ||
-        emojiButtonRef.current?.contains(target)
+        emojiPickerRef.current?.contains(
+          target,
+        ) ||
+        emojiButtonRef.current?.contains(
+          target,
+        )
       ) {
         return;
       }
@@ -375,27 +551,9 @@ export default function MessageComposer({
   }, [isEmojiPickerOpen]);
 
   useEffect(() => {
-    if (
-      !selectedFile ||
-      !selectedFile.type.startsWith("image/")
-    ) {
-      setFilePreviewUrl(null);
-      return;
-    }
-
-    const objectUrl =
-      URL.createObjectURL(selectedFile);
-
-    setFilePreviewUrl(objectUrl);
-
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [selectedFile]);
-
-  useEffect(() => {
-    clearSelectedFile();
+    clearSelectedFiles();
     setIsEmojiPickerOpen(false);
+    setUploadProgress(null);
   }, [conversationId]);
 
   useEffect(() => {
@@ -409,7 +567,8 @@ export default function MessageComposer({
   }, [onTypingChange]);
 
   async function submitMessage() {
-    const normalizedBody = body.trim();
+    const normalizedBody =
+      body.trim();
 
     if (!canSend) {
       return;
@@ -420,34 +579,77 @@ export default function MessageComposer({
     setFileError(null);
 
     try {
-      if (selectedFile) {
+      if (selectedFiles.length > 0) {
         setUploadProgress(0);
+        setCompletedUploadFiles(0);
+        setTotalUploadFiles(
+          selectedFiles.length,
+        );
 
-      await sendAttachmentMutation.mutateAsync({
-        conversationId,
-        body: normalizedBody,
-        file: selectedFile,
-        replyToMessageId:
-          activeReplyMessage?.id ?? null,
-        onUploadProgress: (
-          percentage,
-        ) => {
-          setUploadProgress(percentage);
-        },
-      });
+        await sendAttachmentMutation.mutateAsync({
+          conversationId,
+          body: normalizedBody,
+          files: selectedFiles,
+
+          replyToMessageId:
+            activeReplyMessage?.id ??
+            null,
+
+          onUploadProgress: (
+            completedFiles,
+            totalFiles,
+            currentFilePercentage,
+          ) => {
+            const globalPercentage =
+              totalFiles > 0
+                ? Math.min(
+                    100,
+                    Math.round(
+                      (
+                        completedFiles +
+                        currentFilePercentage /
+                          100
+                      ) /
+                        totalFiles *
+                        100,
+                    ),
+                  )
+                : 0;
+
+            setCompletedUploadFiles(
+              Math.min(
+                completedFiles,
+                totalFiles,
+              ),
+            );
+
+            setTotalUploadFiles(
+              totalFiles,
+            );
+
+            setUploadProgress(
+              globalPercentage,
+            );
+          },
+        });
       } else {
         await sendMessageMutation.mutateAsync({
           conversationId,
           senderId,
           body: normalizedBody,
+
           replyToMessageId:
-            activeReplyMessage?.id ?? null,
+            activeReplyMessage?.id ??
+            null,
         });
       }
 
       resetComposer();
     } catch (error) {
       setUploadProgress(null);
+      setCompletedUploadFiles(0);
+      setTotalUploadFiles(0);
+
       console.error(
         "Errore durante l'invio:",
         error,
@@ -463,9 +665,11 @@ export default function MessageComposer({
   }
 
   function handleChange(
-    event: ChangeEvent<HTMLTextAreaElement>,
+    event:
+      ChangeEvent<HTMLTextAreaElement>,
   ) {
-    const nextBody = event.target.value;
+    const nextBody =
+      event.target.value;
 
     setBody(nextBody);
 
@@ -480,7 +684,8 @@ export default function MessageComposer({
   }
 
   function handleKeyDown(
-    event: KeyboardEvent<HTMLTextAreaElement>,
+    event:
+      KeyboardEvent<HTMLTextAreaElement>,
   ) {
     if (
       event.key === "Enter" &&
@@ -506,113 +711,110 @@ export default function MessageComposer({
   }
 
   function handleFileButtonClick(
-  event: MouseEvent<HTMLButtonElement>,
-) {
-  event.preventDefault();
-  event.stopPropagation();
+    event:
+      MouseEvent<HTMLButtonElement>,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
 
-  if (isSending) {
-    return;
+    if (isSending) {
+      return;
+    }
+
+    fileInputRef.current?.click();
   }
-
-  fileInputRef.current?.click();
-}
 
   function handleFileChange(
-  event: ChangeEvent<HTMLInputElement>,
-) {
-  const file =
-    event.target.files?.[0] ?? null;
-
-  if (!file) {
-    return;
-  }
-
-  selectFile(file);
-}
-
-function handleDragEnter(
-  event: DragEvent<HTMLFormElement>,
-) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  if (isSending) {
-    return;
-  }
-
-  dragCounterRef.current += 1;
-
-  const containsFiles =
-    event.dataTransfer.types.includes(
-      "Files",
+    event:
+      ChangeEvent<HTMLInputElement>,
+  ) {
+    const files = Array.from(
+      event.target.files ?? [],
     );
 
-  if (containsFiles) {
-    setIsDraggingFile(true);
-  }
-}
-
-function handleDragOver(
-  event: DragEvent<HTMLFormElement>,
-) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  if (isSending) {
-    event.dataTransfer.dropEffect = "none";
-    return;
+    addSelectedFiles(files);
   }
 
-  event.dataTransfer.dropEffect = "copy";
-}
+  function handleDragEnter(
+    event:
+      DragEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
 
-function handleDragLeave(
-  event: DragEvent<HTMLFormElement>,
-) {
-  event.preventDefault();
-  event.stopPropagation();
+    if (isSending) {
+      return;
+    }
 
-  dragCounterRef.current = Math.max(
-    0,
-    dragCounterRef.current - 1,
-  );
+    dragCounterRef.current += 1;
 
-  if (dragCounterRef.current === 0) {
+    const containsFiles =
+      event.dataTransfer.types.includes(
+        "Files",
+      );
+
+    if (containsFiles) {
+      setIsDraggingFile(true);
+    }
+  }
+
+  function handleDragOver(
+    event:
+      DragEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isSending) {
+      event.dataTransfer.dropEffect =
+        "none";
+
+      return;
+    }
+
+    event.dataTransfer.dropEffect =
+      "copy";
+  }
+
+  function handleDragLeave(
+    event:
+      DragEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    dragCounterRef.current = Math.max(
+      0,
+      dragCounterRef.current - 1,
+    );
+
+    if (
+      dragCounterRef.current === 0
+    ) {
+      setIsDraggingFile(false);
+    }
+  }
+
+  function handleDrop(
+    event:
+      DragEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    dragCounterRef.current = 0;
     setIsDraggingFile(false);
-  }
-}
 
-function handleDrop(
-  event: DragEvent<HTMLFormElement>,
-) {
-  event.preventDefault();
-  event.stopPropagation();
+    if (isSending) {
+      return;
+    }
 
-  dragCounterRef.current = 0;
-  setIsDraggingFile(false);
-
-  if (isSending) {
-    return;
-  }
-
-  const files = Array.from(
-    event.dataTransfer.files,
-  );
-
-  if (files.length === 0) {
-    return;
-  }
-
-  if (files.length > 1) {
-    setFileError(
-      "Puoi allegare un solo file per messaggio.",
+    const files = Array.from(
+      event.dataTransfer.files,
     );
-    return;
-  }
 
-  selectFile(files[0]);
-}
+    addSelectedFiles(files);
+  }
 
   const mutationError =
     sendAttachmentMutation.error ??
@@ -651,15 +853,16 @@ function handleDrop(
             </span>
 
             <strong>
-              Rilascia qui il file
+              Rilascia qui i file
             </strong>
 
             <span>
-              Dimensione massima 10 MB
+              Massimo 10 file, 10 MB ciascuno
             </span>
           </div>
         </div>
       )}
+
       {activeReplyMessage && (
         <div className="message-composer__reply">
           <div className="message-composer__reply-content">
@@ -686,25 +889,83 @@ function handleDrop(
         </div>
       )}
 
-      {selectedFile && (
-        <div className="message-composer__attachment">
-          {filePreviewUrl ? (
-            <img
-              className="message-composer__attachment-preview"
-              src={filePreviewUrl}
-              alt={`Anteprima di ${selectedFile.name}`}
-            />
-          ) : (
-            <div
-              className="message-composer__attachment-icon"
-              aria-hidden="true"
-            >
-              {getFileIcon(selectedFile)}
-            </div>
-          )}
+      {selectedFiles.length > 0 && (
+        <div className="message-composer__attachments">
+          <div className="message-composer__attachments-header">
+            <strong>
+              {selectedFiles.length}{" "}
+              {selectedFiles.length === 1
+                ? "allegato"
+                : "allegati"}
+            </strong>
 
-          {selectedFile &&
-          uploadProgress !== null && (
+            <span>
+              massimo {MAX_FILES_PER_MESSAGE}
+            </span>
+          </div>
+
+          <div className="message-composer__attachments-list">
+            {filePreviews.map(
+              ({
+                file,
+                previewUrl,
+              }) => (
+                <div
+                  key={getFileIdentifier(
+                    file,
+                  )}
+                  className="message-composer__attachment"
+                >
+                  {previewUrl ? (
+                    <img
+                      className="message-composer__attachment-preview"
+                      src={previewUrl}
+                      alt={`Anteprima di ${file.name}`}
+                    />
+                  ) : (
+                    <div
+                      className="message-composer__attachment-icon"
+                      aria-hidden="true"
+                    >
+                      {getFileIcon(file)}
+                    </div>
+                  )}
+
+                  <div className="message-composer__attachment-info">
+                    <strong
+                      className="message-composer__attachment-name"
+                      title={file.name}
+                    >
+                      {file.name}
+                    </strong>
+
+                    <span className="message-composer__attachment-size">
+                      {formatFileSize(
+                        file.size,
+                      )}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="message-composer__attachment-remove"
+                    onClick={() =>
+                      removeSelectedFile(
+                        file,
+                      )
+                    }
+                    disabled={isSending}
+                    aria-label={`Rimuovi ${file.name}`}
+                    title="Rimuovi allegato"
+                  >
+                    ×
+                  </button>
+                </div>
+              ),
+            )}
+          </div>
+
+          {uploadProgress !== null && (
             <div
               className="message-composer__upload"
               role="status"
@@ -712,10 +973,7 @@ function handleDrop(
             >
               <div className="message-composer__upload-header">
                 <span>
-                  Caricamento di{" "}
-                  <strong>
-                    {selectedFile.name}
-                  </strong>
+                  Caricamento allegati
                 </span>
 
                 <span>
@@ -726,10 +984,12 @@ function handleDrop(
               <div
                 className="message-composer__upload-track"
                 role="progressbar"
-                aria-label="Avanzamento caricamento"
+                aria-label="Avanzamento caricamento allegati"
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-valuenow={uploadProgress}
+                aria-valuenow={
+                  uploadProgress
+                }
               >
                 <div
                   className="message-composer__upload-bar"
@@ -738,32 +998,13 @@ function handleDrop(
                   }}
                 />
               </div>
+
+              <span className="message-composer__upload-count">
+                {completedUploadFiles} di{" "}
+                {totalUploadFiles} completati
+              </span>
             </div>
           )}
-
-          <div className="message-composer__attachment-info">
-            <strong
-              className="message-composer__attachment-name"
-              title={selectedFile.name}
-            >
-              {selectedFile.name}
-            </strong>
-
-            <span className="message-composer__attachment-size">
-              {formatFileSize(selectedFile.size)}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="message-composer__attachment-remove"
-            onClick={clearSelectedFile}
-            disabled={isSending}
-            aria-label="Rimuovi allegato"
-            title="Rimuovi allegato"
-          >
-            ×
-          </button>
         </div>
       )}
 
@@ -773,19 +1014,30 @@ function handleDrop(
           className="message-composer__file-input"
           type="file"
           accept={ACCEPTED_FILE_TYPES}
+          multiple
           onChange={handleFileChange}
-          disabled={isSending}
+          disabled={
+            isSending ||
+            selectedFiles.length >=
+              MAX_FILES_PER_MESSAGE
+          }
         />
 
         <button
           type="button"
           className="message-composer__attach"
           onClick={handleFileButtonClick}
-          disabled={isSending}
-          aria-label="Allega un file"
-          title="Allega un file"
+          disabled={
+            isSending ||
+            selectedFiles.length >=
+              MAX_FILES_PER_MESSAGE
+          }
+          aria-label="Allega uno o più file"
+          title="Allega file"
         >
-          <span aria-hidden="true">📎</span>
+          <span aria-hidden="true">
+            📎
+          </span>
         </button>
 
         <div className="message-composer__emoji-wrapper">
@@ -793,13 +1045,19 @@ function handleDrop(
             ref={emojiButtonRef}
             type="button"
             className="message-composer__emoji-button"
-            onClick={handleEmojiButtonClick}
+            onClick={
+              handleEmojiButtonClick
+            }
             disabled={isSending}
             aria-label="Apri selettore emoji"
-            aria-expanded={isEmojiPickerOpen}
+            aria-expanded={
+              isEmojiPickerOpen
+            }
             title="Emoji"
           >
-            <span aria-hidden="true">😊</span>
+            <span aria-hidden="true">
+              😊
+            </span>
           </button>
 
           {isEmojiPickerOpen && (
@@ -815,7 +1073,9 @@ function handleDrop(
                     key={emoji}
                     type="button"
                     className="message-composer__emoji-option"
-                    onClick={() => insertEmoji(emoji)}
+                    onClick={() =>
+                      insertEmoji(emoji)
+                    }
                     aria-label={`Inserisci ${emoji}`}
                   >
                     {emoji}
@@ -833,29 +1093,33 @@ function handleDrop(
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             placeholder={
-              selectedFile
+              selectedFiles.length > 0
                 ? "Aggiungi un messaggio..."
                 : activeReplyMessage
                   ? "Scrivi una risposta..."
                   : "Scrivi un messaggio..."
             }
             rows={1}
-            maxLength={MAX_MESSAGE_LENGTH}
+            maxLength={
+              MAX_MESSAGE_LENGTH
+            }
             disabled={isSending}
             aria-label={
-              selectedFile
-                ? "Aggiungi un messaggio all'allegato"
+              selectedFiles.length > 0
+                ? "Aggiungi un messaggio agli allegati"
                 : activeReplyMessage
                   ? "Scrivi una risposta"
                   : "Scrivi un messaggio"
             }
           />
 
-          {remainingCharacters <= 250 && (
+          {remainingCharacters <=
+            250 && (
             <span
               className={[
                 "message-composer__counter",
-                remainingCharacters <= 50
+                remainingCharacters <=
+                50
                   ? "message-composer__counter--warning"
                   : "",
               ]
@@ -898,8 +1162,9 @@ function handleDrop(
       </div>
 
       <p className="message-composer__hint">
-        Invio per spedire · Shift + Invio per andare a
-        capo · Emoji disponibili · File massimo 10 MB
+        Invio per spedire · Shift + Invio
+        per andare a capo · Massimo 10
+        allegati da 10 MB ciascuno
         {activeReplyMessage
           ? " · Esc per annullare la risposta"
           : ""}

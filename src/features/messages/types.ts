@@ -44,9 +44,13 @@ export type SendMessageInput = {
 export type SendAttachmentInput = {
   conversationId: string;
   body: string;
-  file: File;
+  files: File[];
   replyToMessageId?: string | null;
-  onUploadProgress?: (percentage: number) => void;
+  onUploadProgress?: (
+    completedFiles: number,
+    totalFiles: number,
+    percentage: number,
+  ) => void;
 };
 
 export type SetMessageReactionInput = {

@@ -1,4 +1,5 @@
 import * as tus from "tus-js-client";
+
 import { supabase } from "../../lib/supabase";
 
 import type {
@@ -7,7 +8,11 @@ import type {
 } from "./types";
 
 const CHAT_FILES_BUCKET = "chat-files";
+
+const MAX_FILES_PER_MESSAGE = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+const SIGNED_URL_DURATION = 60 * 60;
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -25,6 +30,15 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.ms-powerpoint",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ]);
+
+type UploadedAttachment = {
+  storage_path: string;
+  original_name: string;
+  mime_type: string;
+  file_size: number;
+  width: number | null;
+  height: number | null;
+};
 
 function sanitizeFileName(fileName: string) {
   const normalizedName = fileName
@@ -51,20 +65,38 @@ function createStoragePath(
 
 function validateFile(file: File) {
   if (file.size <= 0) {
-    throw new Error("Il file selezionato è vuoto.");
+    throw new Error(
+      `Il file "${file.name}" è vuoto.`,
+    );
   }
 
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(
-      "Il file supera il limite massimo di 10 MB.",
+      `Il file "${file.name}" supera il limite massimo di 10 MB.`,
     );
   }
 
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     throw new Error(
-      "Questo tipo di file non è supportato.",
+      `Il tipo del file "${file.name}" non è supportato.`,
     );
   }
+}
+
+function validateFiles(files: File[]) {
+  if (files.length === 0) {
+    throw new Error(
+      "Nessun file selezionato.",
+    );
+  }
+
+  if (files.length > MAX_FILES_PER_MESSAGE) {
+    throw new Error(
+      "Puoi allegare al massimo 10 file per messaggio.",
+    );
+  }
+
+  files.forEach(validateFile);
 }
 
 function getImageDimensions(
@@ -81,8 +113,14 @@ function getImageDimensions(
   }
 
   return new Promise((resolve) => {
-    const objectUrl = URL.createObjectURL(file);
+    const objectUrl =
+      URL.createObjectURL(file);
+
     const image = new Image();
+
+    function cleanup() {
+      URL.revokeObjectURL(objectUrl);
+    }
 
     image.onload = () => {
       resolve({
@@ -90,7 +128,7 @@ function getImageDimensions(
         height: image.naturalHeight,
       });
 
-      URL.revokeObjectURL(objectUrl);
+      cleanup();
     };
 
     image.onerror = () => {
@@ -99,7 +137,7 @@ function getImageDimensions(
         height: null,
       });
 
-      URL.revokeObjectURL(objectUrl);
+      cleanup();
     };
 
     image.src = objectUrl;
@@ -144,7 +182,8 @@ async function uploadFileWithProgress({
   await new Promise<void>(
     (resolve, reject) => {
       const upload = new tus.Upload(file, {
-        endpoint: `${supabaseUrl}/storage/v1/upload/resumable`,
+        endpoint:
+          `${supabaseUrl}/storage/v1/upload/resumable`,
 
         retryDelays: [
           0,
@@ -154,7 +193,8 @@ async function uploadFileWithProgress({
         ],
 
         headers: {
-          authorization: `Bearer ${session.access_token}`,
+          authorization:
+            `Bearer ${session.access_token}`,
           "x-upsert": "false",
         },
 
@@ -205,53 +245,151 @@ async function uploadFileWithProgress({
   );
 }
 
+async function removeUploadedFiles(
+  storagePaths: string[],
+) {
+  if (storagePaths.length === 0) {
+    return;
+  }
+
+  const { error } = await supabase.storage
+    .from(CHAT_FILES_BUCKET)
+    .remove(storagePaths);
+
+  if (error) {
+    console.error(
+      "Errore durante la rimozione dei file:",
+      error,
+    );
+  }
+}
+
+async function uploadAttachments({
+  conversationId,
+  files,
+  onUploadProgress,
+}: {
+  conversationId: string;
+  files: File[];
+  onUploadProgress?:
+    SendAttachmentInput["onUploadProgress"];
+}): Promise<UploadedAttachment[]> {
+  const uploadedAttachments:
+    UploadedAttachment[] = [];
+
+  const generatedStoragePaths: string[] =
+    [];
+
+  const totalFiles = files.length;
+
+  try {
+    for (
+      let fileIndex = 0;
+      fileIndex < files.length;
+      fileIndex += 1
+    ) {
+      const file = files[fileIndex];
+
+      const completedFiles = fileIndex;
+
+      const storagePath =
+        createStoragePath(
+          conversationId,
+          file.name,
+        );
+
+      generatedStoragePaths.push(
+        storagePath,
+      );
+
+      const dimensions =
+        await getImageDimensions(file);
+
+      onUploadProgress?.(
+        completedFiles,
+        totalFiles,
+        0,
+      );
+
+      await uploadFileWithProgress({
+        file,
+        storagePath,
+
+        onProgress: (percentage) => {
+          onUploadProgress?.(
+            completedFiles,
+            totalFiles,
+            percentage,
+          );
+        },
+      });
+
+      uploadedAttachments.push({
+        storage_path: storagePath,
+        original_name: file.name,
+        mime_type: file.type,
+        file_size: file.size,
+        width: dimensions.width,
+        height: dimensions.height,
+      });
+
+      onUploadProgress?.(
+        completedFiles + 1,
+        totalFiles,
+        100,
+      );
+    }
+
+    return uploadedAttachments;
+  } catch (error) {
+    await removeUploadedFiles(
+      generatedStoragePaths,
+    );
+
+    throw error;
+  }
+}
+
 export async function sendMessageWithAttachment({
   conversationId,
   body,
-  file,
+  files,
   replyToMessageId = null,
   onUploadProgress,
 }: SendAttachmentInput): Promise<ChatMessage> {
-  validateFile(file);
+  validateFiles(files);
 
-  const storagePath = createStoragePath(
-    conversationId,
-    file.name,
-  );
+  const uploadedAttachments =
+    await uploadAttachments({
+      conversationId,
+      files,
+      onUploadProgress,
+    });
 
-  const dimensions =
-    await getImageDimensions(file);
-
-  onUploadProgress?.(0);
-
-  await uploadFileWithProgress({
-    file,
-    storagePath,
-    onProgress: onUploadProgress,
-  });
+  const uploadedStoragePaths =
+    uploadedAttachments.map(
+      (attachment) =>
+        attachment.storage_path,
+    );
 
   try {
-    const { data, error } = await supabase.rpc(
-      "send_message_with_attachment",
-      {
-        target_conversation_id: conversationId,
-        message_body: body.trim() || null,
-        target_reply_to_message_id:
-          replyToMessageId,
-        attachment_storage_path:
-          storagePath,
-        attachment_original_name:
-          file.name,
-        attachment_mime_type:
-          file.type,
-        attachment_file_size:
-          file.size,
-        attachment_width:
-          dimensions.width,
-        attachment_height:
-          dimensions.height,
-      },
-    );
+    const { data, error } =
+      await supabase.rpc(
+        "send_message_with_attachments",
+        {
+          target_conversation_id:
+            conversationId,
+
+          message_body:
+            body.trim() || null,
+
+          target_reply_to_message_id:
+            replyToMessageId,
+
+          attachments_data:
+            uploadedAttachments,
+        },
+      );
 
     if (error) {
       throw error;
@@ -268,33 +406,24 @@ export async function sendMessageWithAttachment({
       message_attachments: [],
     };
   } catch (error) {
-    const { error: cleanupError } =
-      await supabase.storage
-        .from(CHAT_FILES_BUCKET)
-        .remove([storagePath]);
-
-    if (cleanupError) {
-      console.error(
-        "Errore durante la rimozione del file:",
-        cleanupError,
-      );
-    }
+    await removeUploadedFiles(
+      uploadedStoragePaths,
+    );
 
     throw error;
   }
 }
 
-const SIGNED_URL_DURATION = 60 * 60;
-
 export async function getAttachmentSignedUrl(
   storagePath: string,
 ): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from(CHAT_FILES_BUCKET)
-    .createSignedUrl(
-      storagePath,
-      SIGNED_URL_DURATION,
-    );
+  const { data, error } =
+    await supabase.storage
+      .from(CHAT_FILES_BUCKET)
+      .createSignedUrl(
+        storagePath,
+        SIGNED_URL_DURATION,
+      );
 
   if (error) {
     throw error;
@@ -313,16 +442,20 @@ export async function downloadAttachment(
   storagePath: string,
   originalName: string,
 ): Promise<void> {
-  const { data, error } = await supabase.storage
-    .from(CHAT_FILES_BUCKET)
-    .download(storagePath);
+  const { data, error } =
+    await supabase.storage
+      .from(CHAT_FILES_BUCKET)
+      .download(storagePath);
 
   if (error) {
     throw error;
   }
 
-  const objectUrl = URL.createObjectURL(data);
-  const anchor = document.createElement("a");
+  const objectUrl =
+    URL.createObjectURL(data);
+
+  const anchor =
+    document.createElement("a");
 
   anchor.href = objectUrl;
   anchor.download = originalName;
