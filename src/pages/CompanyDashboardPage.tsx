@@ -582,38 +582,43 @@ async function handleDeleteConversation() {
         onlineUser.role === "customer",
     );
 
+    const isCompanyChatVisible = isMobile
+  ? isMobileChatOpen &&
+    Boolean(selectedConversation)
+  : Boolean(selectedConversation);
+
   return (
     <div className="company-dashboard">
-      <header className="company-header">
-        <div className="company-header__identity">
-          <span className="company-header__eyebrow">
-            Sistema Messaggistica
-          </span>
+      {!isCompanyChatVisible && (
+        <header className="company-header">
+          <div className="company-header__identity">
+            <span className="company-header__eyebrow">
+              Sistema Messaggistica
+            </span>
 
-          <h1>Conversazioni clienti</h1>
+            <h1>Conversazioni clienti</h1>
 
-          <p>
-            Operatore:{" "}
-            <strong>
-              {profile?.display_name ??
-                "Azienda"}
-            </strong>
-          </p>
-        </div>
+            <p>
+              Operatore:{" "}
+              <strong>
+                {profile?.display_name ?? "Azienda"}
+              </strong>
+            </p>
+          </div>
 
-        <div className="company-header__actions">
-          
-          <PushNotificationButton />
+          <div className="company-header__actions">
+            <PushNotificationButton />
 
-          <button
-            type="button"
-            className="company-header__logout"
-            onClick={handleLogout}
-          >
-            Esci
-          </button>
-        </div>
-      </header>
+            <button
+              type="button"
+              className="company-header__logout"
+              onClick={handleLogout}
+            >
+              Esci
+            </button>
+          </div>
+        </header>
+      )}
 
       <main
         className={[
