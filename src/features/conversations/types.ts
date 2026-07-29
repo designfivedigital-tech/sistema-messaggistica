@@ -7,6 +7,8 @@ export type CustomerSummary = {
   id: string;
   display_name: string;
   email: string | null;
+  avatar_url: string | null;
+  website_url: string | null;
 };
 
 export type CompanyConversation = {

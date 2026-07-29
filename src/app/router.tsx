@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedRoute from "../features/auth/ProtectedRoute";
 import RoleRoute from "../features/auth/RoleRoute";
-
+import ProfilePage from "../pages/ProfilePage";
 import AuthRedirectPage from "../pages/AuthRedirectPage";
 import CompanyDashboardPage from "../pages/CompanyDashboardPage";
 import CustomerChatPage from "../pages/CustomerChatPage";
@@ -42,6 +42,14 @@ export default function AppRouter() {
           <RoleRoute allowedRole="company">
             <CompanyDashboardPage />
           </RoleRoute>
+        }
+      />
+      <Route
+        path="/profilo"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
         }
       />
 

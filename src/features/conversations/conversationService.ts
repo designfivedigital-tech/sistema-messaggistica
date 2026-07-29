@@ -16,6 +16,8 @@ type CompanyConversationRow = {
 
   customer_display_name: string | null;
   customer_email: string | null;
+  customer_avatar_url: string | null;
+  customer_website_url: string | null;
 
   last_message_body: string | null;
   last_message_created_at: string | null;
@@ -46,13 +48,17 @@ export async function getCompanyConversations(): Promise<
   return conversationRows.map(
     (conversation): CompanyConversation => {
       const customer = {
-        id: conversation.customer_id,
-        display_name:
-          conversation.customer_display_name ??
-          "Cliente",
-        email:
-          conversation.customer_email ?? null,
-      };
+  id: conversation.customer_id,
+  display_name:
+    conversation.customer_display_name ??
+    "Cliente",
+  email:
+    conversation.customer_email ?? null,
+  avatar_url:
+    conversation.customer_avatar_url ?? null,
+  website_url:
+    conversation.customer_website_url ?? null,
+};
 
       return {
         id: conversation.id,

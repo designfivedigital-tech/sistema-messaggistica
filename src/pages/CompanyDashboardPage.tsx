@@ -602,6 +602,13 @@ async function handleDeleteConversation() {
         </div>
 
         <div className="company-header__actions">
+          <button
+            type="button"
+            className="company-header__profile"
+            onClick={() => navigate("/profilo")}
+          >
+            Profilo
+          </button>
           <PushNotificationButton />
 
           <button
@@ -852,6 +859,19 @@ async function handleDeleteConversation() {
                         .customer.display_name
                     }
                   </h2>
+
+                  {selectedConversation.customer.website_url && (
+                    <a
+                      className="company-chat-panel__website"
+                      href={
+                        selectedConversation.customer.website_url
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {selectedConversation.customer.website_url}
+                    </a>
+                  )}
 
                   {typingLabel ? (
                     <p className="typing-indicator">

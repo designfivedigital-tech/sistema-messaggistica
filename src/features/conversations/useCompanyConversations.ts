@@ -19,6 +19,8 @@ type CompanyConversationRow = {
 
   customer_display_name: string | null;
   customer_email: string | null;
+  customer_avatar_url: string | null;
+  customer_website_url: string | null;
 
   last_message_body: string | null;
   last_message_created_at: string | null;
@@ -59,12 +61,17 @@ async function getCompanyConversations(): Promise<
       updated_at: row.updated_at,
 
       customer: {
-        id: row.customer_id,
-        display_name:
-          row.customer_display_name ??
-          "Cliente",
-        email: row.customer_email ?? null,
-      },
+      id: row.customer_id,
+      display_name:
+        row.customer_display_name ??
+        "Cliente",
+      email:
+        row.customer_email ?? null,
+      avatar_url:
+        row.customer_avatar_url ?? null,
+      website_url:
+        row.customer_website_url ?? null,
+    },
 
       last_message_body:
         row.last_message_body ?? null,

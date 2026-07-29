@@ -143,6 +143,14 @@ const companyIsOnline = onlineUsers.some(
         </div>
 
         <div className="customer-chat__actions">
+
+          <button
+            type="button"
+            className="customer-chat__profile"
+            onClick={() => navigate("/profilo")}
+          >
+            Profilo
+          </button>
           <PushNotificationButton />
 
           <button
