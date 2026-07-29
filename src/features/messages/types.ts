@@ -46,6 +46,7 @@ export type SendAttachmentInput = {
   body: string;
   file: File;
   replyToMessageId?: string | null;
+  onUploadProgress?: (percentage: number) => void;
 };
 
 export type SetMessageReactionInput = {

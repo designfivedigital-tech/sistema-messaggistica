@@ -4831,3 +4831,61 @@ z-index: 100;
   color: #64748b;
   font-size: 0.8rem;
 }
+
+.message-composer__upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.message-composer__upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #334155;
+  font-size: 0.78rem;
+}
+
+.message-composer__upload-header span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-composer__upload-header span:last-child {
+  flex: 0 0 auto;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.message-composer__upload-track {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.18);
+}
+
+.message-composer__upload-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: #2563eb;
+  transition: width 150ms ease;
+}
+
+@media (max-width: 600px) {
+  .message-composer__upload {
+    margin: 8px 0;
+    padding: 9px 10px;
+  }
+
+  .message-composer__upload-header {
+    font-size: 0.72rem;
+  }
+}

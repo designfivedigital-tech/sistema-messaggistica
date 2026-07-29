@@ -120,6 +120,8 @@ export default function MessageComposer({
     useState(false);
   const [isDraggingFile, setIsDraggingFile] =
   useState(false);
+  const [uploadProgress, setUploadProgress] =
+  useState<number | null>(null);
 
 
   const textareaRef =
@@ -232,7 +234,7 @@ export default function MessageComposer({
     setIsEmojiPickerOpen(false);
     clearSelectedFile();
     clearReplyMessage();
-
+    setUploadProgress(null);
     requestAnimationFrame(() => {
       resizeTextarea();
       textareaRef.current?.focus();
@@ -419,13 +421,20 @@ export default function MessageComposer({
 
     try {
       if (selectedFile) {
-        await sendAttachmentMutation.mutateAsync({
-          conversationId,
-          body: normalizedBody,
-          file: selectedFile,
-          replyToMessageId:
-            activeReplyMessage?.id ?? null,
-        });
+        setUploadProgress(0);
+
+      await sendAttachmentMutation.mutateAsync({
+        conversationId,
+        body: normalizedBody,
+        file: selectedFile,
+        replyToMessageId:
+          activeReplyMessage?.id ?? null,
+        onUploadProgress: (
+          percentage,
+        ) => {
+          setUploadProgress(percentage);
+        },
+      });
       } else {
         await sendMessageMutation.mutateAsync({
           conversationId,
@@ -438,6 +447,7 @@ export default function MessageComposer({
 
       resetComposer();
     } catch (error) {
+      setUploadProgress(null);
       console.error(
         "Errore durante l'invio:",
         error,
@@ -690,6 +700,44 @@ function handleDrop(
               aria-hidden="true"
             >
               {getFileIcon(selectedFile)}
+            </div>
+          )}
+
+          {selectedFile &&
+          uploadProgress !== null && (
+            <div
+              className="message-composer__upload"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="message-composer__upload-header">
+                <span>
+                  Caricamento di{" "}
+                  <strong>
+                    {selectedFile.name}
+                  </strong>
+                </span>
+
+                <span>
+                  {uploadProgress}%
+                </span>
+              </div>
+
+              <div
+                className="message-composer__upload-track"
+                role="progressbar"
+                aria-label="Avanzamento caricamento"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={uploadProgress}
+              >
+                <div
+                  className="message-composer__upload-bar"
+                  style={{
+                    width: `${uploadProgress}%`,
+                  }}
+                />
+              </div>
             </div>
           )}
 

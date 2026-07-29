@@ -1,3 +1,4 @@
+import * as tus from "tus-js-client";
 import { supabase } from "../../lib/supabase";
 
 import type {
@@ -105,11 +106,111 @@ function getImageDimensions(
   });
 }
 
+async function uploadFileWithProgress({
+  file,
+  storagePath,
+  onProgress,
+}: {
+  file: File;
+  storagePath: string;
+  onProgress?: (
+    percentage: number,
+  ) => void;
+}): Promise<void> {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw sessionError;
+  }
+
+  if (!session?.access_token) {
+    throw new Error(
+      "Sessione non disponibile. Accedi nuovamente.",
+    );
+  }
+
+  const supabaseUrl =
+    import.meta.env.VITE_SUPABASE_URL;
+
+  if (!supabaseUrl) {
+    throw new Error(
+      "VITE_SUPABASE_URL non è configurato.",
+    );
+  }
+
+  await new Promise<void>(
+    (resolve, reject) => {
+      const upload = new tus.Upload(file, {
+        endpoint: `${supabaseUrl}/storage/v1/upload/resumable`,
+
+        retryDelays: [
+          0,
+          1000,
+          3000,
+          5000,
+        ],
+
+        headers: {
+          authorization: `Bearer ${session.access_token}`,
+          "x-upsert": "false",
+        },
+
+        metadata: {
+          bucketName: CHAT_FILES_BUCKET,
+          objectName: storagePath,
+          contentType:
+            file.type ||
+            "application/octet-stream",
+          cacheControl: "3600",
+        },
+
+        uploadDataDuringCreation: true,
+        removeFingerprintOnSuccess: true,
+
+        onError(error) {
+          reject(error);
+        },
+
+        onProgress(
+          bytesUploaded,
+          bytesTotal,
+        ) {
+          if (bytesTotal <= 0) {
+            onProgress?.(0);
+            return;
+          }
+
+          const percentage = Math.min(
+            100,
+            Math.round(
+              (bytesUploaded / bytesTotal) *
+                100,
+            ),
+          );
+
+          onProgress?.(percentage);
+        },
+
+        onSuccess() {
+          onProgress?.(100);
+          resolve();
+        },
+      });
+
+      upload.start();
+    },
+  );
+}
+
 export async function sendMessageWithAttachment({
   conversationId,
   body,
   file,
   replyToMessageId = null,
+  onUploadProgress,
 }: SendAttachmentInput): Promise<ChatMessage> {
   validateFile(file);
 
@@ -121,18 +222,13 @@ export async function sendMessageWithAttachment({
   const dimensions =
     await getImageDimensions(file);
 
-  const { error: uploadError } =
-    await supabase.storage
-      .from(CHAT_FILES_BUCKET)
-      .upload(storagePath, file, {
-        cacheControl: "3600",
-        contentType: file.type,
-        upsert: false,
-      });
+  onUploadProgress?.(0);
 
-  if (uploadError) {
-    throw uploadError;
-  }
+  await uploadFileWithProgress({
+    file,
+    storagePath,
+    onProgress: onUploadProgress,
+  });
 
   try {
     const { data, error } = await supabase.rpc(
