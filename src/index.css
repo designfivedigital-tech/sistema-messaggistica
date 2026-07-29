@@ -5300,3 +5300,55 @@ z-index: 100;
     white-space: nowrap;
   }
 }
+
+/* =========================================================
+   AZIONI HEADER CLIENTE
+   ========================================================= */
+
+.customer-chat__actions {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.customer-chat__profile,
+.customer-chat__logout {
+  min-height: 42px;
+  flex: 0 0 auto;
+  padding: 0 18px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.customer-chat__profile:hover,
+.customer-chat__logout:hover {
+  border-color: #98a2b3;
+  background: #f2f4f7;
+}
+
+.customer-chat__actions .push-notification-card {
+  width: auto;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.customer-chat__actions
+  .push-notification-card__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.customer-chat__actions
+  .push-notification-card__button {
+  min-height: 42px;
+  white-space: nowrap;
+}

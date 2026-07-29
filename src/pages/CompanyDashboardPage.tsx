@@ -602,13 +602,7 @@ async function handleDeleteConversation() {
         </div>
 
         <div className="company-header__actions">
-          <button
-            type="button"
-            className="company-header__profile"
-            onClick={() => navigate("/profilo")}
-          >
-            Profilo
-          </button>
+          
           <PushNotificationButton />
 
           <button
