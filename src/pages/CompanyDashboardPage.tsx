@@ -25,6 +25,10 @@ import { useConversationStore } from "../stores/conversationStore";
 
 const MOBILE_MEDIA_QUERY = "(max-width: 760px)";
 
+type ConversationFilter =
+  | "all"
+  | ConversationStatus;
+
 export default function CompanyDashboardPage() {
   const navigate = useNavigate();
 
@@ -44,6 +48,9 @@ export default function CompanyDashboardPage() {
     const [isConversationMenuOpen, setIsConversationMenuOpen] =
   useState(false);
 
+  const [conversationFilter, setConversationFilter] =
+  useState<ConversationFilter>("all");
+
 const conversationMenuRef =
   useRef<HTMLDivElement | null>(null);
 
@@ -58,6 +65,34 @@ const conversationMenuRef =
     error,
     refetch,
   } = useCompanyConversations();
+
+  const conversationCounts = {
+  all: conversations.length,
+
+  new: conversations.filter(
+    (conversation) =>
+      conversation.status === "new",
+  ).length,
+
+  in_progress: conversations.filter(
+    (conversation) =>
+      conversation.status === "in_progress",
+  ).length,
+
+  closed: conversations.filter(
+    (conversation) =>
+      conversation.status === "closed",
+  ).length,
+};
+
+const filteredConversations =
+  conversationFilter === "all"
+    ? conversations
+    : conversations.filter(
+        (conversation) =>
+          conversation.status ===
+          conversationFilter,
+      );
 
   const updateConversationStatusMutation =
   useUpdateConversationStatus();
@@ -154,21 +189,23 @@ const conversationMenuRef =
    * nessuna chat.
    */
   useEffect(() => {
-    if (
-      isMobile ||
-      conversations.length === 0 ||
-      selectedConversationId
-    ) {
-      return;
-    }
+  if (
+    isMobile ||
+    filteredConversations.length === 0 ||
+    selectedConversationId
+  ) {
+    return;
+  }
 
-    selectConversation(conversations[0].id);
-  }, [
-    conversations,
-    isMobile,
-    selectedConversationId,
-    selectConversation,
-  ]);
+  selectConversation(
+    filteredConversations[0].id,
+  );
+}, [
+  filteredConversations,
+  isMobile,
+  selectedConversationId,
+  selectConversation,
+]);
 
   /*
    * Gestisce una conversazione selezionata
@@ -258,6 +295,47 @@ const conversationMenuRef =
     );
   };
 }, [isConversationMenuOpen]);
+
+
+  function handleConversationFilterChange(
+  filter: ConversationFilter,
+) {
+  setConversationFilter(filter);
+  setIsConversationMenuOpen(false);
+
+  const nextConversations =
+    filter === "all"
+      ? conversations
+      : conversations.filter(
+          (conversation) =>
+            conversation.status === filter,
+        );
+
+  if (isMobile) {
+    clearSelectedConversation();
+    setIsMobileChatOpen(false);
+    return;
+  }
+
+  const selectedIsVisible =
+    nextConversations.some(
+      (conversation) =>
+        conversation.id ===
+        selectedConversationId,
+    );
+
+  if (selectedIsVisible) {
+    return;
+  }
+
+  if (nextConversations.length > 0) {
+    selectConversation(
+      nextConversations[0].id,
+    );
+  } else {
+    clearSelectedConversation();
+  }
+}
 
   function handleSelectConversation(
   conversationId: string,
@@ -436,6 +514,101 @@ const conversationMenuRef =
             </button>
           </div>
 
+          <div
+            className="conversation-filters"
+            role="group"
+            aria-label="Filtra conversazioni"
+          >
+            <button
+              type="button"
+              className={[
+                "conversation-filters__button",
+                conversationFilter === "all"
+                  ? "conversation-filters__button--active"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() =>
+                handleConversationFilterChange(
+                  "all",
+                )
+              }
+            >
+              <span>Tutte</span>
+              <strong>
+                {conversationCounts.all}
+              </strong>
+            </button>
+
+            <button
+              type="button"
+              className={[
+                "conversation-filters__button",
+                conversationFilter === "new"
+                  ? "conversation-filters__button--active"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() =>
+                handleConversationFilterChange(
+                  "new",
+                )
+              }
+            >
+              <span>Nuove</span>
+              <strong>
+                {conversationCounts.new}
+              </strong>
+            </button>
+
+            <button
+              type="button"
+              className={[
+                "conversation-filters__button",
+                conversationFilter ===
+                "in_progress"
+                  ? "conversation-filters__button--active"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() =>
+                handleConversationFilterChange(
+                  "in_progress",
+                )
+              }
+            >
+              <span>In lavorazione</span>
+              <strong>
+                {conversationCounts.in_progress}
+              </strong>
+            </button>
+
+            <button
+              type="button"
+              className={[
+                "conversation-filters__button",
+                conversationFilter === "closed"
+                  ? "conversation-filters__button--active"
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() =>
+                handleConversationFilterChange(
+                  "closed",
+                )
+              }
+            >
+              <span>Chiuse</span>
+              <strong>
+                {conversationCounts.closed}
+              </strong>
+            </button>
+          </div>
+
           {isLoading && (
             <div className="company-state">
               <p>
@@ -467,7 +640,7 @@ const conversationMenuRef =
 
           {!isLoading && !isError && (
             <ConversationList
-              conversations={conversations}
+              conversations={filteredConversations}
               selectedConversationId={
                 selectedConversationId
               }
