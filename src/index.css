@@ -5364,8 +5364,8 @@ z-index: 100;
   }
 
   .conversation-actions {
-    flex: 0 0 40px;
-    margin-left: auto;
+    display: flex;
+    justify-content: end;
   }
 
   .conversation-actions__trigger {
