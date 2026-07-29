@@ -21,6 +21,7 @@ import { useMessagesRealtime } from "../features/messages/useMessagesRealtime";
 import { useTypingPresence } from "../features/messages/useTypingPresence";
 import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
 import { useConversationStore } from "../stores/conversationStore";
+import { useDeleteConversation } from "../features/conversations/useDeleteConversation";
 
 
 const MOBILE_MEDIA_QUERY = "(max-width: 760px)";
@@ -53,6 +54,21 @@ export default function CompanyDashboardPage() {
 
   const [conversationSearch, setConversationSearch] =
   useState("");
+
+  const [
+  isDeleteConversationDialogOpen,
+  setIsDeleteConversationDialogOpen,
+] = useState(false);
+
+const [
+  deleteConversationConfirmation,
+  setDeleteConversationConfirmation,
+] = useState("");
+
+const [
+  deleteConversationError,
+  setDeleteConversationError,
+] = useState<string | null>(null);
 
 const conversationMenuRef =
   useRef<HTMLDivElement | null>(null);
@@ -133,6 +149,9 @@ const filteredConversations =
 
   const updateConversationStatusMutation =
   useUpdateConversationStatus();
+
+  const deleteConversationMutation =
+  useDeleteConversation();
 
   const selectedConversationId =
     useConversationStore(
@@ -438,6 +457,59 @@ const nextConversations =
     console.error(
       "Impossibile aggiornare lo stato:",
       statusError,
+    );
+  }
+}
+
+  function handleOpenDeleteConversationDialog() {
+  setIsConversationMenuOpen(false);
+  setDeleteConversationConfirmation("");
+  setDeleteConversationError(null);
+  setIsDeleteConversationDialogOpen(true);
+}
+
+function handleCloseDeleteConversationDialog() {
+  if (deleteConversationMutation.isPending) {
+    return;
+  }
+
+  setIsDeleteConversationDialogOpen(false);
+  setDeleteConversationConfirmation("");
+  setDeleteConversationError(null);
+}
+
+async function handleDeleteConversation() {
+  if (
+    !selectedConversation ||
+    deleteConversationConfirmation !== "ELIMINA"
+  ) {
+    return;
+  }
+
+  try {
+    setDeleteConversationError(null);
+
+    const deletedConversationId =
+      selectedConversation.id;
+
+    await deleteConversationMutation.mutateAsync({
+      conversationId: deletedConversationId,
+    });
+
+    clearSelectedConversation();
+    setIsMobileChatOpen(false);
+    setIsDeleteConversationDialogOpen(false);
+    setDeleteConversationConfirmation("");
+  } catch (deleteError) {
+    console.error(
+      "Errore durante l'eliminazione della conversazione:",
+      deleteError,
+    );
+
+    setDeleteConversationError(
+      deleteError instanceof Error
+        ? deleteError.message
+        : "Impossibile eliminare la conversazione.",
     );
   }
 }
@@ -885,6 +957,17 @@ const nextConversations =
                           Riapri conversazione
                         </button>
                       )}
+
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="conversation-actions__danger"
+                        onClick={
+                          handleOpenDeleteConversationDialog
+                        }
+                      >
+                        Elimina conversazione
+                      </button>
                     </div>
                   )}
                 </div>
@@ -928,6 +1011,105 @@ const nextConversations =
           )}
         </section>
       </main>
+
+        {isDeleteConversationDialogOpen &&
+  selectedConversation && (
+    <div
+      className="conversation-delete-dialog"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          handleCloseDeleteConversationDialog();
+        }
+      }}
+    >
+      <div
+        className="conversation-delete-dialog__card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-conversation-title"
+      >
+        <h2 id="delete-conversation-title">
+          Elimina definitivamente la conversazione?
+        </h2>
+
+        <p>
+          Verranno eliminati tutti i messaggi,
+          le reazioni e gli allegati della conversazione
+          con{" "}
+          <strong>
+            {
+              selectedConversation.customer
+                .display_name
+            }
+          </strong>
+          .
+        </p>
+
+        <p>
+          Questa operazione non può essere annullata.
+          Per confermare, digita:
+        </p>
+
+        <strong className="conversation-delete-dialog__confirmation-word">
+          ELIMINA
+        </strong>
+
+        <input
+          type="text"
+          value={deleteConversationConfirmation}
+          onChange={(event) =>
+            setDeleteConversationConfirmation(
+              event.target.value.toUpperCase(),
+            )
+          }
+          placeholder="Scrivi ELIMINA"
+          autoComplete="off"
+          disabled={
+            deleteConversationMutation.isPending
+          }
+        />
+
+        {deleteConversationError && (
+          <p className="conversation-delete-dialog__error">
+            {deleteConversationError}
+          </p>
+        )}
+
+        <div className="conversation-delete-dialog__actions">
+          <button
+            type="button"
+            className="conversation-delete-dialog__cancel"
+            onClick={
+              handleCloseDeleteConversationDialog
+            }
+            disabled={
+              deleteConversationMutation.isPending
+            }
+          >
+            Annulla
+          </button>
+
+          <button
+            type="button"
+            className="conversation-delete-dialog__confirm"
+            onClick={() =>
+              void handleDeleteConversation()
+            }
+            disabled={
+              deleteConversationConfirmation !==
+                "ELIMINA" ||
+              deleteConversationMutation.isPending
+            }
+          >
+            {deleteConversationMutation.isPending
+              ? "Eliminazione..."
+              : "Elimina definitivamente"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
     </div>
   );
 }

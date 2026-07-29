@@ -4556,3 +4556,117 @@ z-index: 100;
     transform: none;
   }
 }
+
+/* =========================================================
+   ELIMINAZIONE CONVERSAZIONE
+   ========================================================= */
+
+.conversation-delete-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.conversation-delete-dialog__card {
+  width: min(100%, 480px);
+  padding: 26px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.conversation-delete-dialog__card h2 {
+  margin: 0 0 14px;
+  color: #111;
+  font-size: 1.35rem;
+}
+
+.conversation-delete-dialog__card p {
+  margin: 0 0 14px;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.conversation-delete-dialog__confirmation-word {
+  display: block;
+  margin-bottom: 10px;
+  color: #c62828;
+  letter-spacing: 0.08em;
+}
+
+.conversation-delete-dialog__card input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 11px;
+  outline: none;
+}
+
+.conversation-delete-dialog__card input:focus {
+  border-color: #c62828;
+  box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.12);
+}
+
+.conversation-delete-dialog__error {
+  margin-top: 12px !important;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: #fef3f2;
+  color: #b42318 !important;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.conversation-delete-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.conversation-delete-dialog__actions button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-weight: 750;
+}
+
+.conversation-delete-dialog__cancel {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #172033;
+}
+
+.conversation-delete-dialog__confirm {
+  border: 0;
+  background: #c62828;
+  color: #ffffff;
+}
+
+.conversation-delete-dialog__confirm:disabled {
+  opacity: 0.45;
+}
+
+@media (max-width: 560px) {
+  .conversation-delete-dialog {
+    padding: 14px;
+  }
+
+  .conversation-delete-dialog__card {
+    padding: 22px 18px;
+  }
+
+  .conversation-delete-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .conversation-delete-dialog__actions button {
+    width: 100%;
+  }
+}

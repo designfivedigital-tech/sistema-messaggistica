@@ -97,3 +97,52 @@ export async function updateConversationStatus(
     throw error;
   }
 }
+
+export async function deleteConversationComplete(
+  conversationId: string,
+): Promise<void> {
+  const { data, error } = await supabase.rpc(
+    "delete_conversation_complete",
+    {
+      target_conversation_id: conversationId,
+    },
+  );
+
+  if (error) {
+    console.error(
+      "Errore eliminazione conversazione:",
+      error,
+    );
+
+    throw error;
+  }
+
+  const storagePaths =
+    Array.isArray(data)
+      ? data.filter(
+          (value): value is string =>
+            typeof value === "string" &&
+            value.length > 0,
+        )
+      : [];
+
+  if (storagePaths.length === 0) {
+    return;
+  }
+
+  const { error: storageError } =
+    await supabase.storage
+      .from("chat-files")
+      .remove(storagePaths);
+
+  if (storageError) {
+    console.error(
+      "Conversazione eliminata, ma alcuni file non sono stati rimossi dallo Storage:",
+      storageError,
+    );
+
+    throw new Error(
+      "La conversazione è stata eliminata, ma non è stato possibile rimuovere tutti i file allegati.",
+    );
+  }
+}
