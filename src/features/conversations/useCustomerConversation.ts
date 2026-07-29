@@ -12,9 +12,7 @@ export type CustomerConversation = {
   updated_at: string;
 };
 
-async function getCustomerConversation(): Promise<
-  CustomerConversation
-> {
+async function getCustomerConversation(): Promise<CustomerConversation> {
   const {
     data: { user },
     error: userError,
@@ -34,13 +32,35 @@ async function getCustomerConversation(): Promise<
       "id, customer_id, status, created_at, updated_at",
     )
     .eq("customer_id", user.id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw error;
   }
 
-  return data as CustomerConversation;
+  if (data) {
+    return data as CustomerConversation;
+  }
+
+  const {
+    data: newConversation,
+    error: createError,
+  } = await supabase
+    .from("conversations")
+    .insert({
+      customer_id: user.id,
+      status: "new",
+    })
+    .select(
+      "id, customer_id, status, created_at, updated_at",
+    )
+    .single();
+
+  if (createError) {
+    throw createError;
+  }
+
+  return newConversation as CustomerConversation;
 }
 
 export function useCustomerConversation() {
