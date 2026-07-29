@@ -1,24 +1,38 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
-import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
+
 import { logoutUser } from "../features/auth/authService";
 import { useAuth } from "../features/auth/useAuth";
 import { useProfile } from "../features/auth/useProfile";
-
 import ConversationList from "../features/conversations/ConversationList";
 import { useCompanyConversations } from "../features/conversations/useCompanyConversations";
-import { useTypingPresence } from "../features/messages/useTypingPresence";
 import MessageComposer from "../features/messages/MessageComposer";
 import MessageList from "../features/messages/MessageList";
+import { useMarkMessagesRead } from "../features/messages/useMarkMessagesRead";
 import { useMessages } from "../features/messages/useMessages";
 import { useMessagesRealtime } from "../features/messages/useMessagesRealtime";
-import { useMarkMessagesRead } from "../features/messages/useMarkMessagesRead";
+import { useTypingPresence } from "../features/messages/useTypingPresence";
+import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
 import { useConversationStore } from "../stores/conversationStore";
 
-
+const MOBILE_MEDIA_QUERY = "(max-width: 760px)";
 
 export default function CompanyDashboardPage() {
   const navigate = useNavigate();
+
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return window.matchMedia(
+      MOBILE_MEDIA_QUERY,
+    ).matches;
+  });
+
   const [isMobileChatOpen, setIsMobileChatOpen] =
     useState(false);
 
@@ -34,22 +48,27 @@ export default function CompanyDashboardPage() {
     refetch,
   } = useCompanyConversations();
 
-  const selectedConversationId = useConversationStore(
-    (state) => state.selectedConversationId,
-  );
+  const selectedConversationId =
+    useConversationStore(
+      (state) => state.selectedConversationId,
+    );
 
-  const selectConversation = useConversationStore(
-    (state) => state.selectConversation,
-  );
+  const selectConversation =
+    useConversationStore(
+      (state) => state.selectConversation,
+    );
 
-  const clearSelectedConversation = useConversationStore(
-    (state) => state.clearSelectedConversation,
-  );
+  const clearSelectedConversation =
+    useConversationStore(
+      (state) => state.clearSelectedConversation,
+    );
 
-  const selectedConversation = conversations.find(
-    (conversation) =>
-      conversation.id === selectedConversationId,
-  );
+  const selectedConversation =
+    conversations.find(
+      (conversation) =>
+        conversation.id ===
+        selectedConversationId,
+    );
 
   const {
     data: messages = [],
@@ -59,58 +78,143 @@ export default function CompanyDashboardPage() {
   useMessagesRealtime(selectedConversationId);
   useMarkMessagesRead(selectedConversationId);
 
-const {
-  onlineUsers,
-  typingUsers,
-  setTyping,
-} = useTypingPresence({
-  conversationId: selectedConversationId,
-  currentUserId: user?.id ?? null,
-  displayName:
-    profile?.display_name ??
-    user?.email ??
-    "Operatore",
-  role: profile?.role ?? "company",
-  enabled: Boolean(
-    selectedConversationId &&
-      user &&
-      profile,
-  ),
-});
+  const {
+    onlineUsers,
+    typingUsers,
+    setTyping,
+  } = useTypingPresence({
+    conversationId: selectedConversationId,
+    currentUserId: user?.id ?? null,
+    displayName:
+      profile?.display_name ??
+      user?.email ??
+      "Operatore",
+    role: profile?.role ?? "company",
+    enabled: Boolean(
+      selectedConversationId &&
+        user &&
+        profile,
+    ),
+  });
 
+  /*
+   * Rileva il passaggio tra desktop e mobile.
+   * Quando si entra nella modalità mobile,
+   * viene sempre mostrata inizialmente la lista.
+   */
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(
+      MOBILE_MEDIA_QUERY,
+    );
+
+    function handleViewportChange(
+      event: MediaQueryListEvent,
+    ) {
+      setIsMobile(event.matches);
+
+      if (event.matches) {
+        setIsMobileChatOpen(false);
+      }
+    }
+
+    setIsMobile(mediaQuery.matches);
+
+    mediaQuery.addEventListener(
+      "change",
+      handleViewportChange,
+    );
+
+    return () => {
+      mediaQuery.removeEventListener(
+        "change",
+        handleViewportChange,
+      );
+    };
+  }, []);
+
+  /*
+   * Su desktop seleziona automaticamente
+   * la prima conversazione.
+   *
+   * Su smartphone non apre automaticamente
+   * nessuna chat.
+   */
   useEffect(() => {
     if (
-      conversations.length > 0 &&
-      !selectedConversationId
+      isMobile ||
+      conversations.length === 0 ||
+      selectedConversationId
     ) {
-      selectConversation(conversations[0].id);
+      return;
     }
+
+    selectConversation(conversations[0].id);
   }, [
     conversations,
+    isMobile,
     selectedConversationId,
     selectConversation,
   ]);
 
+  /*
+   * Gestisce una conversazione selezionata
+   * che non esiste più nell'elenco.
+   */
   useEffect(() => {
     if (
-      selectedConversationId &&
-      conversations.length > 0 &&
-      !selectedConversation
+      !selectedConversationId ||
+      conversations.length === 0 ||
+      selectedConversation
     ) {
-      selectConversation(conversations[0].id);
+      return;
     }
+
+    if (isMobile) {
+      clearSelectedConversation();
+      setIsMobileChatOpen(false);
+      return;
+    }
+
+    selectConversation(conversations[0].id);
   }, [
+    clearSelectedConversation,
     conversations,
+    isMobile,
     selectedConversation,
     selectedConversationId,
     selectConversation,
   ]);
 
-    function handleSelectConversation(
+  /*
+   * Se non esistono più conversazioni,
+   * rimuove l'eventuale selezione precedente.
+   */
+  useEffect(() => {
+    if (
+      isLoading ||
+      conversations.length > 0 ||
+      !selectedConversationId
+    ) {
+      return;
+    }
+
+    clearSelectedConversation();
+    setIsMobileChatOpen(false);
+  }, [
+    clearSelectedConversation,
+    conversations.length,
+    isLoading,
+    selectedConversationId,
+  ]);
+
+  function handleSelectConversation(
     conversationId: string,
   ) {
     selectConversation(conversationId);
-    setIsMobileChatOpen(true);
+
+    if (isMobile) {
+      setIsMobileChatOpen(true);
+    }
   }
 
   function handleMobileBack() {
@@ -121,7 +225,10 @@ const {
     try {
       await logoutUser();
       clearSelectedConversation();
-      navigate("/login", { replace: true });
+
+      navigate("/login", {
+        replace: true,
+      });
     } catch (logoutError) {
       console.error(
         "Errore durante il logout:",
@@ -131,57 +238,61 @@ const {
   }
 
   function getCompanyTypingLabel() {
-  if (typingUsers.length === 0) {
-    return null;
+    if (typingUsers.length === 0) {
+      return null;
+    }
+
+    const customersTyping =
+      typingUsers.filter(
+        (typingUser) =>
+          typingUser.role === "customer",
+      );
+
+    const operatorsTyping =
+      typingUsers.filter(
+        (typingUser) =>
+          typingUser.role === "company",
+      );
+
+    const names = [
+      ...customersTyping.map(
+        (typingUser) =>
+          typingUser.displayName ||
+          "Il cliente",
+      ),
+      ...operatorsTyping.map(
+        (typingUser) =>
+          typingUser.displayName ||
+          "Un operatore",
+      ),
+    ];
+
+    if (names.length === 1) {
+      return `${names[0]} sta scrivendo...`;
+    }
+
+    if (names.length === 2) {
+      return `${names[0]} e ${names[1]} stanno scrivendo...`;
+    }
+
+    return `${names[0]}, ${names[1]} e altri ${
+      names.length - 2
+    } stanno scrivendo...`;
   }
 
-  const customersTyping = typingUsers.filter(
-    (typingUser) =>
-      typingUser.role === "customer",
-  );
+  const typingLabel =
+    getCompanyTypingLabel();
 
-  const operatorsTyping = typingUsers.filter(
-    (typingUser) =>
-      typingUser.role === "company",
-  );
-
-  const names = [
-    ...customersTyping.map(
-      (typingUser) =>
-        typingUser.displayName ||
-        "Il cliente",
-    ),
-    ...operatorsTyping.map(
-      (typingUser) =>
-        typingUser.displayName ||
-        "Un operatore",
-    ),
-  ];
-
-  if (names.length === 1) {
-    return `${names[0]} sta scrivendo...`;
-  }
-
-  if (names.length === 2) {
-    return `${names[0]} e ${names[1]} stanno scrivendo...`;
-  }
-
-  return `${names[0]}, ${names[1]} e altri ${
-    names.length - 2
-  } stanno scrivendo...`;
-}
-
-const typingLabel = getCompanyTypingLabel();
-
-const customerIsOnline = onlineUsers.some(
-  (onlineUser) =>
-    onlineUser.role === "customer",
-);
+  const customerIsOnline =
+    onlineUsers.some(
+      (onlineUser) =>
+        onlineUser.role === "customer",
+    );
 
   return (
     <div className="company-dashboard">
       <header className="company-header">
-        <div>
+        <div className="company-header__identity">
           <span className="company-header__eyebrow">
             Sistema Messaggistica
           </span>
@@ -191,7 +302,8 @@ const customerIsOnline = onlineUsers.some(
           <p>
             Operatore:{" "}
             <strong>
-              {profile?.display_name ?? "Azienda"}
+              {profile?.display_name ??
+                "Azienda"}
             </strong>
           </p>
         </div>
@@ -232,11 +344,12 @@ const customerIsOnline = onlineUsers.some(
 
             <button
               type="button"
-              className={`company-sidebar__refresh ${
+              className={[
+                "company-sidebar__refresh",
                 isFetching
                   ? "company-sidebar__refresh--loading"
-                  : ""
-              }`}
+                  : "",
+              ].join(" ")}
               onClick={() => void refetch()}
               aria-label="Aggiorna conversazioni"
               title="Aggiorna"
@@ -248,7 +361,9 @@ const customerIsOnline = onlineUsers.some(
 
           {isLoading && (
             <div className="company-state">
-              <p>Caricamento conversazioni...</p>
+              <p>
+                Caricamento conversazioni...
+              </p>
             </div>
           )}
 
@@ -264,7 +379,9 @@ const customerIsOnline = onlineUsers.some(
 
               <button
                 type="button"
-                onClick={() => void refetch()}
+                onClick={() =>
+                  void refetch()
+                }
               >
                 Riprova
               </button>
@@ -277,7 +394,9 @@ const customerIsOnline = onlineUsers.some(
               selectedConversationId={
                 selectedConversationId
               }
-              onSelect={handleSelectConversation}
+              onSelect={
+                handleSelectConversation
+              }
             />
           )}
         </aside>
@@ -287,61 +406,68 @@ const customerIsOnline = onlineUsers.some(
             <>
               <header className="company-chat-panel__header">
                 <button
-                type="button"
-                className="company-chat-panel__back"
-                onClick={handleMobileBack}
-                aria-label="Torna alle conversazioni"
-                title="Torna alle conversazioni"
-              >
-                ←
-              </button>
+                  type="button"
+                  className="company-chat-panel__back"
+                  onClick={handleMobileBack}
+                  aria-label="Torna alle conversazioni"
+                  title="Torna alle conversazioni"
+                >
+                  ←
+                </button>
+
                 <div className="company-chat-panel__avatar">
-                  {selectedConversation.customer.display_name
+                  {selectedConversation.customer
+                    .display_name
                     .trim()
                     .charAt(0)
                     .toUpperCase() || "C"}
                 </div>
 
-                <div>
+                <div className="company-chat-panel__identity">
                   <h2>
                     {
-                      selectedConversation.customer
-                        .display_name
+                      selectedConversation
+                        .customer.display_name
                     }
                   </h2>
 
                   {typingLabel ? (
-                  <p className="typing-indicator">
-                    <span className="typing-indicator__dots">
-                      <span />
-                      <span />
-                      <span />
-                    </span>
+                    <p className="typing-indicator">
+                      <span className="typing-indicator__dots">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
 
-                    {typingLabel}
-                  </p>
-                ) : customerIsOnline ? (
-                  <p className="presence-status presence-status--online">
-                    <span className="presence-status__dot" />
+                      {typingLabel}
+                    </p>
+                  ) : customerIsOnline ? (
+                    <p className="presence-status presence-status--online">
+                      <span className="presence-status__dot" />
 
-                    Online
-                  </p>
-                ) : (
-                  <p className="presence-status">
-                    Conversazione{" "}
-                    {selectedConversation.status === "open"
-                      ? "aperta"
-                      : "chiusa"}
-                  </p>
-                )}
+                      Online
+                    </p>
+                  ) : (
+                    <p className="presence-status">
+                      Conversazione{" "}
+                      {selectedConversation.status ===
+                      "open"
+                        ? "aperta"
+                        : "chiusa"}
+                    </p>
+                  )}
                 </div>
               </header>
 
               <div className="company-chat-panel__messages">
                 <MessageList
                   messages={messages}
-                  currentUserId={user?.id ?? ""}
-                  isLoading={isMessagesLoading}
+                  currentUserId={
+                    user?.id ?? ""
+                  }
+                  isLoading={
+                    isMessagesLoading
+                  }
                 />
 
                 <MessageComposer
@@ -357,11 +483,13 @@ const customerIsOnline = onlineUsers.some(
             <div className="company-chat-panel__placeholder">
               <div>
                 <h2>
-                  Nessuna conversazione selezionata
+                  Nessuna conversazione
+                  selezionata
                 </h2>
 
                 <p>
-                  Seleziona un cliente dall’elenco.
+                  Seleziona un cliente
+                  dall’elenco.
                 </p>
               </div>
             </div>

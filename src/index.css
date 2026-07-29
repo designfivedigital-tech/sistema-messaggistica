@@ -3843,3 +3843,350 @@ main:not(.company-layout):not(.customer-chat__body) {
     flex: 0 0 auto;
   }
 }
+
+/* =========================================================
+   DASHBOARD AZIENDA MOBILE - CORREZIONE FINALE
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .company-dashboard {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /*
+   * Header generale compatto.
+   */
+  .company-header {
+    display: flex;
+    min-height: 68px;
+    flex: 0 0 68px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding:
+      max(8px, env(safe-area-inset-top))
+      10px
+      8px;
+    overflow: hidden;
+  }
+
+  .company-header__identity {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .company-header__eyebrow,
+  .company-header p {
+    display: none;
+  }
+
+  .company-header h1 {
+    overflow: hidden;
+    margin: 0;
+    color: #000000;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /*
+   * Le azioni rimangono sulla stessa riga.
+   */
+  .company-header__actions {
+    display: flex;
+    width: auto;
+    min-width: 0;
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .company-header__actions
+    .push-notification-card {
+    display: flex;
+    width: auto;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .company-header__actions
+    .push-notification-card__actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+
+  /*
+   * Il pulsante di test non serve
+   * nell'interfaccia mobile normale.
+   */
+  .company-header__actions
+    .push-notification-card__button--test {
+    display: none;
+  }
+
+  .company-header__actions
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    ) {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    color: transparent;
+    font-size: 0;
+  }
+
+  .company-header__actions
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    )::before {
+    color: #000000;
+    content: "🔔";
+    font-size: 1rem;
+  }
+
+  .company-header__actions
+    .push-notification-card__message {
+    display: none;
+  }
+
+  .company-header__logout {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    color: transparent;
+    font-size: 0;
+  }
+
+  .company-header__logout::before {
+    color: #000000;
+    content: "↪";
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  /*
+   * Area lista/chat.
+   */
+  .company-layout {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .company-sidebar,
+  .company-chat-panel {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /*
+   * Lista visibile.
+   */
+  .company-layout--list-open
+    .company-sidebar {
+    z-index: 2;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .company-layout--list-open
+    .company-chat-panel {
+    z-index: 1;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(100%);
+  }
+
+  /*
+   * Chat visibile.
+   */
+  .company-layout--chat-open
+    .company-sidebar {
+    z-index: 1;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-30%);
+  }
+
+  .company-layout--chat-open
+    .company-chat-panel {
+    z-index: 2;
+    display: flex;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+
+  .company-sidebar {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 0;
+    background: #ffffff;
+  }
+
+  .company-sidebar__header {
+    min-height: 64px;
+    flex: 0 0 64px;
+    padding: 10px 14px;
+  }
+
+  .company-sidebar__header h2 {
+    margin-bottom: 2px;
+    font-size: 1.05rem;
+  }
+
+  .company-sidebar__refresh {
+    width: 38px;
+    height: 38px;
+  }
+
+  .conversation-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .conversation-item {
+    grid-template-columns:
+      46px minmax(0, 1fr);
+    gap: 11px;
+    padding: 13px 14px;
+  }
+
+  .conversation-item__avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  /*
+   * Header della singola chat.
+   */
+  .company-chat-panel__header {
+    min-height: 64px;
+    flex: 0 0 64px;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .company-chat-panel__back {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #000000;
+    font-size: 1.55rem;
+  }
+
+  .company-chat-panel__back:hover {
+    background: #f2f2f4;
+  }
+
+  .company-chat-panel__avatar {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+  }
+
+  .company-chat-panel__identity {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .company-chat-panel__header h2 {
+    overflow: hidden;
+    margin: 0 0 2px;
+    font-size: 0.98rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .company-chat-panel__header
+    .presence-status,
+  .company-chat-panel__header
+    .typing-indicator {
+    min-height: 16px;
+    overflow: hidden;
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .company-chat-panel__messages {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .company-chat-panel__messages
+    .message-list {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+
+  .company-chat-panel__messages
+    .message-composer {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 390px) {
+  .company-header {
+    padding-right: 7px;
+    padding-left: 9px;
+  }
+
+  .company-header h1 {
+    font-size: 0.95rem;
+  }
+
+  .company-header__actions
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    ),
+  .company-header__logout {
+    width: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .company-chat-panel__back {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .company-chat-panel__avatar {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+}
