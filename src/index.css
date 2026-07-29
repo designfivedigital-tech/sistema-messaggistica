@@ -4349,7 +4349,7 @@ z-index: 100;
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
   gap: 8px;
-  padding: 12px 14px;
+  padding: 12px 14px 12px;
   border-bottom: 1px solid #ececef;
   background: #fff;
 }
@@ -4490,4 +4490,35 @@ z-index: 100;
 .conversation-search__clear:hover {
   background: #e9e9ec;
   color: #111;
+}
+
+/* =========================================================
+   RICERCA LIVE CONVERSAZIONI - CORREZIONE VISIBILITÀ
+   ========================================================= */
+
+.conversation-search {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  margin: 12px 14px 0;
+  z-index: 2;
+}
+
+.conversation-search input {
+  display: block;
+  width: 100%;
+  height: 42px;
+  min-width: 0;
+  padding: 0 42px;
+  border: 1px solid #dedee3;
+  border-radius: 12px;
+  background: #f7f7f8;
+  color: #111;
+  opacity: 1;
+  visibility: visible;
+}
+
+.conversation-filters {
+  flex: 0 0 auto;
 }
