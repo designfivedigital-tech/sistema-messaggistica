@@ -75,3 +75,25 @@ export async function getCompanyConversations(): Promise<
     },
   );
 }
+
+export async function updateConversationStatus(
+  conversationId: string,
+  status: ConversationStatus,
+): Promise<void> {
+  const { error } = await supabase
+    .from("conversations")
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", conversationId);
+
+  if (error) {
+    console.error(
+      "Errore aggiornamento stato conversazione:",
+      error,
+    );
+
+    throw error;
+  }
+}

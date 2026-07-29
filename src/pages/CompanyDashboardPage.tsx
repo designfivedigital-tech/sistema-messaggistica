@@ -1,9 +1,13 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { useUpdateConversationStatus } from "../features/conversations/useUpdateConversationStatus";
+import type {
+  ConversationStatus,
+} from "../features/conversations/types";
 import { logoutUser } from "../features/auth/authService";
 import { useAuth } from "../features/auth/useAuth";
 import { useProfile } from "../features/auth/useProfile";
@@ -17,6 +21,7 @@ import { useMessagesRealtime } from "../features/messages/useMessagesRealtime";
 import { useTypingPresence } from "../features/messages/useTypingPresence";
 import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
 import { useConversationStore } from "../stores/conversationStore";
+
 
 const MOBILE_MEDIA_QUERY = "(max-width: 760px)";
 
@@ -36,6 +41,12 @@ export default function CompanyDashboardPage() {
   const [isMobileChatOpen, setIsMobileChatOpen] =
     useState(false);
 
+    const [isConversationMenuOpen, setIsConversationMenuOpen] =
+  useState(false);
+
+const conversationMenuRef =
+  useRef<HTMLDivElement | null>(null);
+
   const { user } = useAuth();
   const { data: profile } = useProfile();
 
@@ -47,6 +58,9 @@ export default function CompanyDashboardPage() {
     error,
     refetch,
   } = useCompanyConversations();
+
+  const updateConversationStatusMutation =
+  useUpdateConversationStatus();
 
   const selectedConversationId =
     useConversationStore(
@@ -207,19 +221,82 @@ export default function CompanyDashboardPage() {
     selectedConversationId,
   ]);
 
-  function handleSelectConversation(
-    conversationId: string,
-  ) {
-    selectConversation(conversationId);
-
-    if (isMobile) {
-      setIsMobileChatOpen(true);
-    }
+  useEffect(() => {
+  if (!isConversationMenuOpen) {
+    return;
   }
+
+  function handleDocumentClick(
+    event: MouseEvent,
+  ) {
+    const target = event.target;
+
+    if (!(target instanceof Node)) {
+      return;
+    }
+
+    if (
+      conversationMenuRef.current?.contains(
+        target,
+      )
+    ) {
+      return;
+    }
+
+    setIsConversationMenuOpen(false);
+  }
+
+  document.addEventListener(
+    "mousedown",
+    handleDocumentClick,
+  );
+
+  return () => {
+    document.removeEventListener(
+      "mousedown",
+      handleDocumentClick,
+    );
+  };
+}, [isConversationMenuOpen]);
+
+  function handleSelectConversation(
+  conversationId: string,
+) {
+  setIsConversationMenuOpen(false);
+  selectConversation(conversationId);
+
+  if (isMobile) {
+    setIsMobileChatOpen(true);
+  }
+}
 
   function handleMobileBack() {
-    setIsMobileChatOpen(false);
+  setIsConversationMenuOpen(false);
+  setIsMobileChatOpen(false);
+}
+
+  async function handleConversationStatusChange(
+  status: ConversationStatus,
+) {
+  if (!selectedConversation) {
+    return;
   }
+
+  try {
+    setIsConversationMenuOpen(false);
+
+    await updateConversationStatusMutation.mutateAsync({
+      conversationId:
+        selectedConversation.id,
+      status,
+    });
+  } catch (statusError) {
+    console.error(
+      "Impossibile aggiornare lo stato:",
+      statusError,
+    );
+  }
+}
 
   async function handleLogout() {
     try {
@@ -459,6 +536,86 @@ export default function CompanyDashboardPage() {
                     </p>
                   )}
                 </div>
+                
+                <div
+                  className="conversation-actions"
+                  ref={conversationMenuRef}
+                >
+                  <button
+                    type="button"
+                    className="conversation-actions__trigger"
+                    onClick={() =>
+                      setIsConversationMenuOpen(
+                        (currentValue) =>
+                          !currentValue,
+                      )
+                    }
+                    aria-label="Azioni conversazione"
+                    aria-expanded={
+                      isConversationMenuOpen
+                    }
+                    title="Azioni conversazione"
+                    disabled={
+                      updateConversationStatusMutation.isPending
+                    }
+                  >
+                    ⋮
+                  </button>
+
+                  {isConversationMenuOpen && (
+                    <div
+                      className="conversation-actions__menu"
+                      role="menu"
+                    >
+                      {selectedConversation.status ===
+                        "new" && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() =>
+                            void handleConversationStatusChange(
+                              "in_progress",
+                            )
+                          }
+                        >
+                          Prendi in carico
+                        </button>
+                      )}
+
+                      {selectedConversation.status !==
+                        "closed" && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="conversation-actions__danger"
+                          onClick={() =>
+                            void handleConversationStatusChange(
+                              "closed",
+                            )
+                          }
+                        >
+                          Chiudi conversazione
+                        </button>
+                      )}
+
+                      {selectedConversation.status ===
+                        "closed" && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() =>
+                            void handleConversationStatusChange(
+                              "in_progress",
+                            )
+                          }
+                        >
+                          Riapri conversazione
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
               </header>
 
               <div className="company-chat-panel__messages">

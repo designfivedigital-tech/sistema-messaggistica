@@ -4248,3 +4248,92 @@ main:not(.company-layout):not(.customer-chat__body) {
     font-size: 0.64rem;
   }
 }
+
+/* =========================================================
+   MENU AZIONI CONVERSAZIONE
+   ========================================================= */
+
+.conversation-actions {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.conversation-actions__trigger {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #111;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.conversation-actions__trigger:hover {
+  background: #f1f1f3;
+}
+
+.conversation-actions__trigger:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.conversation-actions__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 50;
+  display: flex;
+  width: 210px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e5e5e7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.conversation-actions__menu button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #ededf0;
+  background: #fff;
+  padding: 12px 14px;
+  color: #171717;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.conversation-actions__menu button:last-child {
+  border-bottom: 0;
+}
+
+.conversation-actions__menu button:hover {
+  background: #f7f7f8;
+}
+
+.conversation-actions__menu
+  .conversation-actions__danger {
+  color: #c62828;
+}
+
+@media (max-width: 760px) {
+  .conversation-actions__trigger {
+    width: 38px;
+    height: 38px;
+  }
+
+  .conversation-actions__menu {
+    width: 200px;
+  }
+}
