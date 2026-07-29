@@ -51,6 +51,9 @@ export default function CompanyDashboardPage() {
   const [conversationFilter, setConversationFilter] =
   useState<ConversationFilter>("all");
 
+  const [conversationSearch, setConversationSearch] =
+  useState("");
+
 const conversationMenuRef =
   useRef<HTMLDivElement | null>(null);
 
@@ -85,13 +88,47 @@ const conversationMenuRef =
   ).length,
 };
 
-const filteredConversations =
+const normalizedConversationSearch =
+  conversationSearch.trim().toLocaleLowerCase("it-IT");
+
+const conversationsFilteredByStatus =
   conversationFilter === "all"
     ? conversations
     : conversations.filter(
         (conversation) =>
           conversation.status ===
           conversationFilter,
+      );
+
+const filteredConversations =
+  normalizedConversationSearch.length === 0
+    ? conversationsFilteredByStatus
+    : conversationsFilteredByStatus.filter(
+        (conversation) => {
+          const displayName =
+            conversation.customer.display_name
+              ?.toLocaleLowerCase("it-IT") ?? "";
+
+          const email =
+            conversation.customer.email
+              ?.toLocaleLowerCase("it-IT") ?? "";
+
+          const lastMessage =
+            conversation.last_message_body
+              ?.toLocaleLowerCase("it-IT") ?? "";
+
+          return (
+            displayName.includes(
+              normalizedConversationSearch,
+            ) ||
+            email.includes(
+              normalizedConversationSearch,
+            ) ||
+            lastMessage.includes(
+              normalizedConversationSearch,
+            )
+          );
+        },
       );
 
   const updateConversationStatusMutation =
@@ -303,13 +340,41 @@ const filteredConversations =
   setConversationFilter(filter);
   setIsConversationMenuOpen(false);
 
-  const nextConversations =
-    filter === "all"
-      ? conversations
-      : conversations.filter(
-          (conversation) =>
-            conversation.status === filter,
-        );
+  const conversationsMatchingStatus =
+  filter === "all"
+    ? conversations
+    : conversations.filter(
+        (conversation) =>
+          conversation.status === filter,
+      );
+
+const normalizedSearch =
+  conversationSearch.trim().toLocaleLowerCase("it-IT");
+
+const nextConversations =
+  normalizedSearch.length === 0
+    ? conversationsMatchingStatus
+    : conversationsMatchingStatus.filter(
+        (conversation) => {
+          const displayName =
+            conversation.customer.display_name
+              ?.toLocaleLowerCase("it-IT") ?? "";
+
+          const email =
+            conversation.customer.email
+              ?.toLocaleLowerCase("it-IT") ?? "";
+
+          const lastMessage =
+            conversation.last_message_body
+              ?.toLocaleLowerCase("it-IT") ?? "";
+
+          return (
+            displayName.includes(normalizedSearch) ||
+            email.includes(normalizedSearch) ||
+            lastMessage.includes(normalizedSearch)
+          );
+        },
+      );
 
   if (isMobile) {
     clearSelectedConversation();
@@ -512,6 +577,40 @@ const filteredConversations =
             >
               ↻
             </button>
+          </div>
+
+          <div className="conversation-search">
+            <span
+              className="conversation-search__icon"
+              aria-hidden="true"
+            >
+              ⌕
+            </span>
+
+            <input
+              type="search"
+              value={conversationSearch}
+              onChange={(event) =>
+                setConversationSearch(event.target.value)
+              }
+              placeholder="Cerca cliente, email o messaggio..."
+              aria-label="Cerca conversazioni"
+              autoComplete="off"
+            />
+
+            {conversationSearch.length > 0 && (
+              <button
+                type="button"
+                className="conversation-search__clear"
+                onClick={() =>
+                  setConversationSearch("")
+                }
+                aria-label="Cancella ricerca"
+                title="Cancella ricerca"
+              >
+                ×
+              </button>
+            )}
           </div>
 
           <div
