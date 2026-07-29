@@ -42,6 +42,20 @@ function getConversationPreview(
   return conversation.last_message_body;
 }
 
+function getConversationStatusLabel(
+  conversation: CompanyConversation,
+) {
+  if (conversation.status === "new") {
+    return "Nuova";
+  }
+
+  if (conversation.status === "in_progress") {
+    return "In lavorazione";
+  }
+
+  return "Chiusa";
+}
+
 export default function ConversationList({
   conversations,
   selectedConversationId,
@@ -73,6 +87,9 @@ export default function ConversationList({
         const preview =
           getConversationPreview(conversation);
 
+        const statusLabel =
+          getConversationStatusLabel(conversation);
+
         return (
           <button
             key={conversation.id}
@@ -88,7 +105,9 @@ export default function ConversationList({
             ]
               .filter(Boolean)
               .join(" ")}
-            onClick={() => onSelect(conversation.id)}
+            onClick={() =>
+              onSelect(conversation.id)
+            }
           >
             <div className="conversation-item__avatar">
               {initial}
@@ -97,7 +116,10 @@ export default function ConversationList({
             <div className="conversation-item__content">
               <div className="conversation-item__top">
                 <strong>
-                  {conversation.customer.display_name}
+                  {
+                    conversation.customer
+                      .display_name
+                  }
                 </strong>
 
                 {conversation.last_message_created_at && (
@@ -113,6 +135,15 @@ export default function ConversationList({
                 )}
               </div>
 
+              <span
+                className={[
+                  "conversation-item__status",
+                  `conversation-item__status--${conversation.status}`,
+                ].join(" ")}
+              >
+                {statusLabel}
+              </span>
+
               <div className="conversation-item__bottom">
                 <p className="conversation-item__preview">
                   {preview}
@@ -124,7 +155,8 @@ export default function ConversationList({
                     aria-label={`${conversation.unread_count} messaggi non letti`}
                     title={`${conversation.unread_count} messaggi non letti`}
                   >
-                    {conversation.unread_count > 99
+                    {conversation.unread_count >
+                    99
                       ? "99+"
                       : conversation.unread_count}
                   </span>

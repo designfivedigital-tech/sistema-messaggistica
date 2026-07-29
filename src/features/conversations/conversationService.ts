@@ -2,12 +2,13 @@ import { supabase } from "../../lib/supabase";
 
 import type {
   CompanyConversation,
+  ConversationStatus,
 } from "./types";
 
 type CompanyConversationRow = {
   id: string;
   customer_id: string;
-  status: "open" | "closed";
+  status: ConversationStatus;
   is_favorite: boolean;
   archived_at: string | null;
   created_at: string;

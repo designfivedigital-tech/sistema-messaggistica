@@ -4208,3 +4208,43 @@ main:not(.company-layout):not(.customer-chat__body) {
   object-fit: cover;
   object-position: center;
 }
+
+/* =========================================================
+   STATO CONVERSAZIONE
+   ========================================================= */
+
+.conversation-item__status {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 20px;
+  align-items: center;
+  margin-top: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.conversation-item__status--new {
+  background: rgba(226, 0, 116, 0.1);
+  color: #e20074;
+}
+
+.conversation-item__status--in_progress {
+  background: #fff4d6;
+  color: #9a6700;
+}
+
+.conversation-item__status--closed {
+  background: #eceef1;
+  color: #667085;
+}
+
+@media (max-width: 760px) {
+  .conversation-item__status {
+    margin-top: 4px;
+    font-size: 0.64rem;
+  }
+}
