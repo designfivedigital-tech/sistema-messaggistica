@@ -116,8 +116,8 @@ const companyIsOnline = onlineUsers.some(
           </div>
 
           <div>
-            <span>Assistenza</span>
-            <h1>Sistema Messaggistica</h1>
+            <span>Chatta con</span>
+            <h1>Five Digital</h1>
             {companyIsTyping ? (
             <p className="typing-indicator">
               <span className="typing-indicator__dots">
