@@ -48,6 +48,8 @@ async function getCompanyConversations(): Promise<
   const rows =
     (data as CompanyConversationRow[] | null) ?? [];
 
+    console.log("Conversazioni azienda:", rows);
+
   return rows.map(
     (row): CompanyConversation => ({
       id: row.id,

@@ -845,11 +845,17 @@ async function handleDeleteConversation() {
                 </button>
 
                 <div className="company-chat-panel__avatar">
-                  {selectedConversation.customer
-                    .display_name
-                    .trim()
-                    .charAt(0)
-                    .toUpperCase() || "C"}
+                  {selectedConversation.customer.avatar_url ? (
+                    <img
+                      src={selectedConversation.customer.avatar_url}
+                      alt={`Avatar di ${selectedConversation.customer.display_name}`}
+                    />
+                  ) : (
+                    selectedConversation.customer.display_name
+                      .trim()
+                      .charAt(0)
+                      .toUpperCase() || "C"
+                  )}
                 </div>
 
                 <div className="company-chat-panel__identity">

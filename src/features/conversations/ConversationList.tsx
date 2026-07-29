@@ -78,11 +78,7 @@ export default function ConversationList({
         const hasUnread =
           conversation.unread_count > 0;
 
-        const initial =
-          conversation.customer.display_name
-            .trim()
-            .charAt(0)
-            .toUpperCase() || "C";
+        
 
         const preview =
           getConversationPreview(conversation);
@@ -110,7 +106,17 @@ export default function ConversationList({
             }
           >
             <div className="conversation-item__avatar">
-              {initial}
+              {conversation.customer.avatar_url ? (
+                <img
+                  src={conversation.customer.avatar_url}
+                  alt={`Avatar di ${conversation.customer.display_name}`}
+                />
+              ) : (
+                conversation.customer.display_name
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase() || "C"
+              )}
             </div>
 
             <div className="conversation-item__content">
