@@ -6,6 +6,7 @@ import {
 
 import type {
   ChangeEvent,
+  DragEvent,
   FormEvent,
   KeyboardEvent,
   MouseEvent,
@@ -117,6 +118,9 @@ export default function MessageComposer({
     useState<string | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] =
     useState(false);
+  const [isDraggingFile, setIsDraggingFile] =
+  useState(false);
+
 
   const textareaRef =
     useRef<HTMLTextAreaElement | null>(null);
@@ -136,6 +140,7 @@ export default function MessageComposer({
     );
 
   const isTypingRef = useRef(false);
+  const dragCounterRef = useRef(0);
 
   const sendMessageMutation = useSendMessage();
   const sendAttachmentMutation =
@@ -295,6 +300,30 @@ export default function MessageComposer({
 
     return null;
   }
+
+  function selectFile(file: File) {
+  setFileError(null);
+
+  const validationError =
+    validateSelectedFile(file);
+
+  if (validationError) {
+    setSelectedFile(null);
+    setFileError(validationError);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+    return;
+  }
+
+  setSelectedFile(file);
+
+  requestAnimationFrame(() => {
+    textareaRef.current?.focus();
+  });
+}
 
   useEffect(() => {
     resizeTextarea();
@@ -480,33 +509,100 @@ export default function MessageComposer({
 }
 
   function handleFileChange(
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
-    const file =
-      event.target.files?.[0] ?? null;
+  event: ChangeEvent<HTMLInputElement>,
+) {
+  const file =
+    event.target.files?.[0] ?? null;
 
-    setFileError(null);
-
-    if (!file) {
-      return;
-    }
-
-    const validationError =
-      validateSelectedFile(file);
-
-    if (validationError) {
-      setSelectedFile(null);
-      setFileError(validationError);
-      event.target.value = "";
-      return;
-    }
-
-    setSelectedFile(file);
-
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-    });
+  if (!file) {
+    return;
   }
+
+  selectFile(file);
+}
+
+function handleDragEnter(
+  event: DragEvent<HTMLFormElement>,
+) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (isSending) {
+    return;
+  }
+
+  dragCounterRef.current += 1;
+
+  const containsFiles =
+    event.dataTransfer.types.includes(
+      "Files",
+    );
+
+  if (containsFiles) {
+    setIsDraggingFile(true);
+  }
+}
+
+function handleDragOver(
+  event: DragEvent<HTMLFormElement>,
+) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (isSending) {
+    event.dataTransfer.dropEffect = "none";
+    return;
+  }
+
+  event.dataTransfer.dropEffect = "copy";
+}
+
+function handleDragLeave(
+  event: DragEvent<HTMLFormElement>,
+) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  dragCounterRef.current = Math.max(
+    0,
+    dragCounterRef.current - 1,
+  );
+
+  if (dragCounterRef.current === 0) {
+    setIsDraggingFile(false);
+  }
+}
+
+function handleDrop(
+  event: DragEvent<HTMLFormElement>,
+) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  dragCounterRef.current = 0;
+  setIsDraggingFile(false);
+
+  if (isSending) {
+    return;
+  }
+
+  const files = Array.from(
+    event.dataTransfer.files,
+  );
+
+  if (files.length === 0) {
+    return;
+  }
+
+  if (files.length > 1) {
+    setFileError(
+      "Puoi allegare un solo file per messaggio.",
+    );
+    return;
+  }
+
+  selectFile(files[0]);
+}
 
   const mutationError =
     sendAttachmentMutation.error ??
@@ -514,8 +610,19 @@ export default function MessageComposer({
 
   return (
     <form
-      className="message-composer"
+      className={[
+        "message-composer",
+        isDraggingFile
+          ? "message-composer--dragging"
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       onSubmit={handleSubmit}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       onClick={(event) => {
         event.stopPropagation();
       }}
@@ -523,6 +630,26 @@ export default function MessageComposer({
         event.stopPropagation();
       }}
     >
+      {isDraggingFile && (
+        <div
+          className="message-composer__drop-overlay"
+          aria-hidden="true"
+        >
+          <div className="message-composer__drop-content">
+            <span className="message-composer__drop-icon">
+              📎
+            </span>
+
+            <strong>
+              Rilascia qui il file
+            </strong>
+
+            <span>
+              Dimensione massima 10 MB
+            </span>
+          </div>
+        </div>
+      )}
       {activeReplyMessage && (
         <div className="message-composer__reply">
           <div className="message-composer__reply-content">

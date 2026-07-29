@@ -4786,3 +4786,48 @@ z-index: 100;
     max-height: calc(100vh - 70px);
   }
 }
+
+.message-composer {
+  position: relative;
+}
+
+.message-composer--dragging {
+  outline: 2px dashed #2563eb;
+  outline-offset: -6px;
+}
+
+.message-composer__drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border-radius: inherit;
+  background: rgba(239, 246, 255, 0.96);
+  backdrop-filter: blur(3px);
+  pointer-events: none;
+}
+
+.message-composer__drop-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 7px;
+  text-align: center;
+  color: #1d4ed8;
+}
+
+.message-composer__drop-icon {
+  font-size: 2rem;
+}
+
+.message-composer__drop-content strong {
+  font-size: 1rem;
+}
+
+.message-composer__drop-content span:last-child {
+  color: #64748b;
+  font-size: 0.8rem;
+}
