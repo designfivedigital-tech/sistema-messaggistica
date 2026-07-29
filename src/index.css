@@ -5244,3 +5244,59 @@ z-index: 100;
   object-fit: cover;
 }
 
+.company-chat-panel__identity {
+  min-width: 0;
+  flex: 1;
+}
+
+.company-chat-panel__name-row {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.company-chat-panel__name-row h2 {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.company-chat-panel__website {
+  color: #667085;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.company-chat-panel__website:hover {
+  color: var(--five-pink, #e20074);
+  text-decoration: underline;
+}
+
+.company-chat-panel__website--mobile {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .company-chat-panel__name-row {
+    display: block;
+  }
+
+  .company-chat-panel__website--desktop {
+    display: none;
+  }
+
+  .company-chat-panel__website--mobile {
+    display: block;
+    max-width: 100%;
+    margin: 1px 0 2px;
+    overflow: hidden;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

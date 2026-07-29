@@ -859,23 +859,46 @@ async function handleDeleteConversation() {
                 </div>
 
                 <div className="company-chat-panel__identity">
-                  <h2>
-                    {
-                      selectedConversation
-                        .customer.display_name
-                    }
-                  </h2>
+                  <div className="company-chat-panel__name-row">
+                    <h2>
+                      {
+                        selectedConversation
+                          .customer.display_name
+                      }
+                    </h2>
+
+                    {selectedConversation.customer.website_url && (
+                      <a
+                        className="company-chat-panel__website company-chat-panel__website--desktop"
+                        href={
+                          selectedConversation.customer.website_url
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        (
+                        {selectedConversation.customer.website_url
+                          .replace(/^https?:\/\//i, "")
+                          .replace(/^www\./i, "")
+                          .replace(/\/$/, "")}
+                        )
+                      </a>
+                    )}
+                  </div>
 
                   {selectedConversation.customer.website_url && (
                     <a
-                      className="company-chat-panel__website"
+                      className="company-chat-panel__website company-chat-panel__website--mobile"
                       href={
                         selectedConversation.customer.website_url
                       }
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {selectedConversation.customer.website_url}
+                      {selectedConversation.customer.website_url
+                        .replace(/^https?:\/\//i, "")
+                        .replace(/^www\./i, "")
+                        .replace(/\/$/, "")}
                     </a>
                   )}
 
