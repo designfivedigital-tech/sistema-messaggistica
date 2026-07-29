@@ -112,7 +112,7 @@ const companyIsOnline = onlineUsers.some(
       <header className="customer-chat__header">
         <div className="customer-chat__identity">
           <div className="customer-chat__avatar">
-            <img src="./public/fivedigital--logo.jpg" alt="logo-five" />
+            <img src="/fivedigital--logo.jpg" alt="logo-five" />
           </div>
 
           <div>
