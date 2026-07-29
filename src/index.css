@@ -4522,3 +4522,37 @@ z-index: 100;
 .conversation-filters {
   flex: 0 0 auto;
 }
+
+/* =========================================================
+   FIX MOBILE: ISOLAMENTO LISTA E CHAT
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .company-layout--list-open .company-sidebar {
+    display: flex;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .company-layout--list-open .company-chat-panel {
+    display: none;
+    visibility: hidden;
+    pointer-events: none;
+    transform: none;
+  }
+
+  .company-layout--chat-open .company-sidebar {
+    display: none;
+    visibility: hidden;
+    pointer-events: none;
+    transform: none;
+  }
+
+  .company-layout--chat-open .company-chat-panel {
+    display: flex;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+}

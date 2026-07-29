@@ -416,6 +416,7 @@ const nextConversations =
   function handleMobileBack() {
   setIsConversationMenuOpen(false);
   setIsMobileChatOpen(false);
+  clearSelectedConversation();
 }
 
   async function handleConversationStatusChange(
