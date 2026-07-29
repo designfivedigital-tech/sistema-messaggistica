@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-
+import type {
+  ConversationStatus,
+} from "./types";
 import { supabase } from "../../lib/supabase";
 
 export type CustomerConversation = {
   id: string;
   customer_id: string;
-  status: "open" | "closed";
+  status: ConversationStatus;
   created_at: string;
   updated_at: string;
 };

@@ -450,10 +450,12 @@ export default function CompanyDashboardPage() {
                   ) : (
                     <p className="presence-status">
                       Conversazione{" "}
-                      {selectedConversation.status ===
-                      "open"
-                        ? "aperta"
-                        : "chiusa"}
+                      {selectedConversation.status === "new"
+                        ? "nuova"
+                        : selectedConversation.status ===
+                            "in_progress"
+                          ? "in lavorazione"
+                          : "chiusa"}
                     </p>
                   )}
                 </div>

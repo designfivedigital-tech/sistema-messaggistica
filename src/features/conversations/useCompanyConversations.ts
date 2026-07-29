@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "../../lib/supabase";
-import type { CompanyConversation } from "./types";
+import type {
+  CompanyConversation,
+  ConversationStatus,
+} from "./types";
 
 type CompanyConversationRow = {
   id: string;
   customer_id: string;
-  status: "open" | "closed";
+  status: ConversationStatus;
 
   is_favorite: boolean;
   archived_at: string | null;

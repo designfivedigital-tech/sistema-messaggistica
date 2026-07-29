@@ -1,3 +1,8 @@
+export type ConversationStatus =
+  | "new"
+  | "in_progress"
+  | "closed";
+
 export type CustomerSummary = {
   id: string;
   display_name: string;
@@ -7,7 +12,7 @@ export type CustomerSummary = {
 export type CompanyConversation = {
   id: string;
   customer_id: string;
-  status: "open" | "closed";
+  status: ConversationStatus;
 
   is_favorite: boolean;
   archived_at: string | null;
