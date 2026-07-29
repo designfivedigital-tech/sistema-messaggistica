@@ -5352,3 +5352,41 @@ z-index: 100;
   min-height: 42px;
   white-space: nowrap;
 }
+
+/* =========================================================
+   HEADER CHAT AZIENDA MOBILE - ALLINEAMENTO SIMMETRICO
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .company-chat-panel__header {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .conversation-actions {
+    flex: 0 0 40px;
+    margin-left: auto;
+  }
+
+  .conversation-actions__trigger {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 390px) {
+  .company-chat-panel__header {
+    padding-right: 7px;
+    padding-left: 7px;
+  }
+
+  .conversation-actions {
+    flex-basis: 36px;
+  }
+
+  .conversation-actions__trigger {
+    width: 36px;
+    height: 36px;
+  }
+}
