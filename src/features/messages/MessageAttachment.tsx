@@ -83,6 +83,9 @@ export default function MessageAttachment({
   const [error, setError] =
     useState<string | null>(null);
 
+    const [isPreviewOpen, setIsPreviewOpen] =
+  useState(false);
+
   const isImage =
     attachment.mime_type.startsWith("image/");
 
@@ -134,6 +137,30 @@ export default function MessageAttachment({
     isImage,
   ]);
 
+  useEffect(() => {
+  if (!isPreviewOpen) {
+    return;
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      setIsPreviewOpen(false);
+    }
+  }
+
+  document.addEventListener(
+    "keydown",
+    handleKeyDown,
+  );
+
+  return () => {
+    document.removeEventListener(
+      "keydown",
+      handleKeyDown,
+    );
+  };
+}, [isPreviewOpen]);
+
   async function handleDownload() {
     if (isDownloading) {
       return;
@@ -167,14 +194,13 @@ export default function MessageAttachment({
         <button
           type="button"
           className="message-attachment__image-button"
-          onClick={handleDownload}
+          onClick={() => setIsPreviewOpen(true)}
           disabled={
-            isDownloading ||
             isLoadingPreview ||
             !signedUrl
           }
-          aria-label={`Scarica ${attachment.original_name}`}
-          title={`Scarica ${attachment.original_name}`}
+          aria-label={`Apri anteprima di ${attachment.original_name}`}
+          title={`Apri anteprima di ${attachment.original_name}`}
         >
           {signedUrl ? (
             <img
@@ -191,11 +217,6 @@ export default function MessageAttachment({
             </div>
           )}
 
-          {isDownloading && (
-            <span className="message-attachment__overlay">
-              Download...
-            </span>
-          )}
         </button>
 
         <div className="message-attachment__image-info">
@@ -211,6 +232,17 @@ export default function MessageAttachment({
               attachment.file_size,
             )}
           </span>
+
+          <button
+            type="button"
+            className="message-attachment__image-download"
+            onClick={() => void handleDownload()}
+            disabled={isDownloading}
+            aria-label={`Scarica ${attachment.original_name}`}
+            title={`Scarica ${attachment.original_name}`}
+          >
+            {isDownloading ? "…" : "↓"}
+          </button>
         </div>
 
         {error && (
@@ -218,6 +250,58 @@ export default function MessageAttachment({
             {error}
           </p>
         )}
+
+        {isPreviewOpen && signedUrl && (
+          <div
+            className="image-preview-modal"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setIsPreviewOpen(false);
+              }
+            }}
+          >
+            <div
+              className="image-preview-modal__content"
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Anteprima di ${attachment.original_name}`}
+            >
+              <button
+                type="button"
+                className="image-preview-modal__close"
+                onClick={() => setIsPreviewOpen(false)}
+                aria-label="Chiudi anteprima"
+                title="Chiudi"
+              >
+                ×
+              </button>
+
+              <img
+                src={signedUrl}
+                alt={attachment.original_name}
+                className="image-preview-modal__image"
+              />
+
+              <div className="image-preview-modal__footer">
+                <span title={attachment.original_name}>
+                  {attachment.original_name}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => void handleDownload()}
+                  disabled={isDownloading}
+                >
+                  {isDownloading
+                    ? "Download..."
+                    : "Scarica"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     );
   }
