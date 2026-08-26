@@ -161,7 +161,11 @@ export function PushNotificationButton() {
       <div className="push-notification-card__actions">
         <button
           type="button"
-          className="push-notification-card__button"
+          className={
+            permission === "granted"
+              ? "push-notification-card__button push-notification-card__button--active"
+              : "push-notification-card__button"
+          }
           disabled={isBusy}
           onClick={handleEnablePush}
         >
