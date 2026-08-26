@@ -3489,7 +3489,9 @@ z-index: 100;
   }
 
   .customer-chat__actions
-    .push-notification-card__button--active::before {
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    ).push-notification-card__button--active::before {
     color: var(--five-pink);
   }
 
@@ -3960,7 +3962,9 @@ z-index: 100;
   }
 
   .company-header__actions
-    .push-notification-card__button--active::before {
+    .push-notification-card__button:not(
+      .push-notification-card__button--test
+    ).push-notification-card__button--active::before {
     color: var(--five-pink);
   }
 
