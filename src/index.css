@@ -6253,3 +6253,189 @@ z-index: 100;
     0 0 0 3px rgba(226, 0, 116, 0.45),
     0 12px 30px rgba(226, 0, 116, 0.16);
 }
+
+/* =========================================================
+   CLOCKIFY
+   ========================================================= */
+
+.customer-category-dialog__card
+  .customer-note-dialog__timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 0;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.customer-category-dialog__card
+  .customer-note-dialog__timer
+  input {
+  width: 18px;
+  min-height: 0;
+  height: 18px;
+  flex-shrink: 0;
+  padding: 0;
+  accent-color: var(--five-pink, #e20074);
+}
+
+.customer-category-dialog__card
+  .customer-note-dialog__hint {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+}
+
+.clockify-settings__operators {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.clockify-settings__operators li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e4e8ef;
+  border-radius: 11px;
+}
+
+.clockify-settings__operators span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.clockify-settings__operators small {
+  overflow: hidden;
+  color: #667085;
+  text-overflow: ellipsis;
+}
+
+.clockify-settings__operators button {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid #f3c7c2;
+  border-radius: 8px;
+  background: #fff;
+  color: #b42318;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customers-page__clockify {
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customers-page__clockify:hover {
+  border-color: #98a2b3;
+  background: #f2f4f7;
+}
+
+.customer-detail__info-wide {
+  grid-column: 1 / -1;
+}
+
+.customer-detail__info select {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 4px;
+  padding: 0 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.customer-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.customer-detail__clockify-link {
+  color: var(--five-pink-dark, #b9005f);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.customer-detail__clockify-link:hover {
+  text-decoration: underline;
+}
+
+.customer-detail__timer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 8px;
+  color: #475467;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.customer-detail__timer-running {
+  color: #b42318;
+}
+
+.customer-detail__timer button,
+.chat-timer-banner button {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #b42318;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customer-detail__timer button:disabled,
+.chat-timer-banner button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.chat-timer-banner {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f3c7c2;
+  background: #fff3f2;
+  color: #7a271a;
+  font-size: 0.84rem;
+}
+
+.chat-timer-banner__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-timer-banner--error {
+  font-weight: 600;
+}

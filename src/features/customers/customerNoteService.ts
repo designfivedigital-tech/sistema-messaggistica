@@ -5,24 +5,30 @@ import type {
   CustomerNote,
 } from "./customerNote";
 
+const CUSTOMER_NOTE_COLUMNS = `
+  id,
+  customer_id,
+  conversation_id,
+  message_id,
+  message_body,
+  message_created_at,
+  body,
+  created_by,
+  created_at,
+  operator_name,
+  clockify_time_entry_id,
+  clockify_project_id,
+  timer_started_at,
+  timer_stopped_at,
+  duration_seconds
+`;
+
 export async function getCustomerNotes(): Promise<
   CustomerNote[]
 > {
   const { data, error } = await supabase
     .from("customer_notes")
-    .select(
-      `
-        id,
-        customer_id,
-        conversation_id,
-        message_id,
-        message_body,
-        message_created_at,
-        body,
-        created_by,
-        created_at
-      `,
-    )
+    .select(CUSTOMER_NOTE_COLUMNS)
     .order("created_at", {
       ascending: false,
     });
@@ -67,19 +73,7 @@ export async function createCustomerNote({
       message_created_at: messageCreatedAt,
       body: normalizedBody,
     })
-    .select(
-      `
-        id,
-        customer_id,
-        conversation_id,
-        message_id,
-        message_body,
-        message_created_at,
-        body,
-        created_by,
-        created_at
-      `,
-    )
+    .select(CUSTOMER_NOTE_COLUMNS)
     .single();
 
   if (error) {

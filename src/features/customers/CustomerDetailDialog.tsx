@@ -10,11 +10,28 @@ import {
   getCustomerCategoryLabel,
   type CustomerCategory,
 } from "./customerCategory";
-import type { CustomerNote } from "./customerNote";
+import {
+  isNoteTimerRunning,
+  type CustomerNote,
+} from "./customerNote";
+import {
+  formatDuration,
+  getClockifyProjectUrl,
+  type CustomerClockifyProject,
+} from "../clockify/clockifyTypes";
+import {
+  useClockifyOperators,
+  useClockifyProjects,
+  useSetCustomerClockifyProject,
+  useStopClockifyTimer,
+} from "../clockify/useClockify";
 
 type CustomerDetailDialogProps = {
   conversation: CompanyConversation;
   category: CustomerCategory | null;
+
+  /* Progetto Clockify abbinato al cliente. */
+  clockifyProject: CustomerClockifyProject | null;
 
   /* Ordinate dalla più recente alla meno recente. */
   notes: CustomerNote[];
@@ -66,6 +83,24 @@ function formatWebsite(value: string) {
     .replace(/\/$/, "");
 }
 
+function formatTime(value: string) {
+  return new Intl.DateTimeFormat("it-IT", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string,
+) {
+  return typeof error === "object" &&
+    error !== null &&
+    "message" in error
+    ? String(error.message)
+    : fallback;
+}
+
 function groupNotesByMonth(
   notes: CustomerNote[],
 ): NoteGroup[] {
@@ -103,9 +138,13 @@ function groupNotesByMonth(
 function CustomerNoteItem({
   note,
   onOpenMessage,
+  onStopTimer,
+  isStoppingTimer,
 }: {
   note: CustomerNote;
   onOpenMessage: (note: CustomerNote) => void;
+  onStopTimer: (noteId: string) => Promise<void>;
+  isStoppingTimer: boolean;
 }) {
   const bodyRef =
     useRef<HTMLParagraphElement | null>(null);
@@ -188,6 +227,41 @@ function CustomerNoteItem({
         {note.body}
       </p>
 
+      {note.clockify_time_entry_id && (
+        <div className="customer-detail__timer">
+          {isNoteTimerRunning(note) ? (
+            <>
+              <span className="customer-detail__timer-running">
+                ● Timer in corso
+                {note.timer_started_at &&
+                  ` dalle ${formatTime(note.timer_started_at)}`}
+                {note.operator_name &&
+                  ` · ${note.operator_name}`}
+              </span>
+
+              <button
+                type="button"
+                onClick={() =>
+                  void onStopTimer(note.id)
+                }
+                disabled={isStoppingTimer}
+              >
+                Ferma
+              </button>
+            </>
+          ) : (
+            <span>
+              ⏱{" "}
+              {formatDuration(
+                note.duration_seconds ?? 0,
+              )}
+              {note.operator_name &&
+                ` · ${note.operator_name}`}
+            </span>
+          )}
+        </div>
+      )}
+
       {(isTruncated || isExpanded) && (
         <button
           type="button"
@@ -211,6 +285,7 @@ function CustomerNoteItem({
 export function CustomerDetailDialog({
   conversation,
   category,
+  clockifyProject,
   notes,
   notesErrorMessage,
   onOpenChat,
@@ -250,6 +325,87 @@ export function CustomerDetailDialog({
 
   const hiddenNotesCount =
     matchingNotes.length - visibleNotes.length;
+
+  const [clockifyError, setClockifyError] =
+    useState<string | null>(null);
+
+  const { data: operators = [] } =
+    useClockifyOperators();
+
+  const { data: projects = [] } =
+    useClockifyProjects(operators.length > 0);
+
+  const setProjectMutation =
+    useSetCustomerClockifyProject();
+
+  const stopTimerMutation = useStopClockifyTimer();
+
+  /*
+   * Il progetto abbinato resta selezionabile
+   * anche se l'elenco non è ancora arrivato.
+   */
+  const projectOptions =
+    clockifyProject &&
+    !projects.some(
+      (project) =>
+        project.id === clockifyProject.project_id,
+    )
+      ? [
+          {
+            id: clockifyProject.project_id,
+            name: clockifyProject.project_name,
+          },
+          ...projects,
+        ]
+      : projects;
+
+  const totalSeconds = notes.reduce(
+    (total, note) =>
+      total + (note.duration_seconds ?? 0),
+    0,
+  );
+
+  const runningNotesCount = notes.filter(
+    isNoteTimerRunning,
+  ).length;
+
+  async function handleProjectChange(
+    projectId: string,
+  ) {
+    try {
+      setClockifyError(null);
+
+      await setProjectMutation.mutateAsync({
+        customerId: conversation.customer_id,
+        project:
+          projectOptions.find(
+            (project) => project.id === projectId,
+          ) ?? null,
+      });
+    } catch (projectError) {
+      setClockifyError(
+        getErrorMessage(
+          projectError,
+          "Impossibile salvare il progetto Clockify.",
+        ),
+      );
+    }
+  }
+
+  async function handleStopTimer(noteId: string) {
+    try {
+      setClockifyError(null);
+
+      await stopTimerMutation.mutateAsync(noteId);
+    } catch (stopError) {
+      setClockifyError(
+        getErrorMessage(
+          stopError,
+          "Impossibile fermare il timer.",
+        ),
+      );
+    }
+  }
 
   function handleNoteSearchChange(value: string) {
     setNoteSearch(value);
@@ -361,15 +517,87 @@ export function CustomerDetailDialog({
                 {formatDate(conversation.created_at)}
               </dd>
             </div>
+
+            <div>
+              <dt>Ore totali</dt>
+              <dd>
+                {formatDuration(totalSeconds)}
+
+                {runningNotesCount > 0 &&
+                  " + timer in corso"}
+              </dd>
+            </div>
+
+            {operators.length > 0 && (
+              <div className="customer-detail__info-wide">
+                <dt>
+                  <label htmlFor="customer-clockify-project">
+                    Progetto Clockify
+                  </label>
+                </dt>
+
+                <dd>
+                  <select
+                    id="customer-clockify-project"
+                    value={
+                      clockifyProject?.project_id ?? ""
+                    }
+                    onChange={(event) =>
+                      void handleProjectChange(
+                        event.target.value,
+                      )
+                    }
+                    disabled={
+                      setProjectMutation.isPending
+                    }
+                  >
+                    <option value="">
+                      Automatico (stesso nome del
+                      cliente)
+                    </option>
+
+                    {projectOptions.map((project) => (
+                      <option
+                        key={project.id}
+                        value={project.id}
+                      >
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </dd>
+              </div>
+            )}
           </dl>
 
-          <button
-            type="button"
-            className="customer-detail__open-chat"
-            onClick={onOpenChat}
-          >
-            Apri chat
-          </button>
+          {clockifyError && (
+            <p className="customer-detail__error">
+              {clockifyError}
+            </p>
+          )}
+
+          <div className="customer-detail__actions">
+            <button
+              type="button"
+              className="customer-detail__open-chat"
+              onClick={onOpenChat}
+            >
+              Apri chat
+            </button>
+
+            {clockifyProject && (
+              <a
+                className="customer-detail__clockify-link"
+                href={getClockifyProjectUrl(
+                  clockifyProject.project_id,
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Vedi attività su Clockify ↗
+              </a>
+            )}
+          </div>
 
           <div className="customer-detail__notes-header">
             <h3>Note ({notes.length})</h3>
@@ -425,6 +653,10 @@ export function CustomerDetailDialog({
                     key={note.id}
                     note={note}
                     onOpenMessage={onOpenMessage}
+                    onStopTimer={handleStopTimer}
+                    isStoppingTimer={
+                      stopTimerMutation.isPending
+                    }
                   />
                 ))}
               </ul>

@@ -19,6 +19,17 @@ export type CustomerNote = {
 
   /* Data di creazione della nota. */
   created_at: string;
+
+  /*
+   * Timer Clockify collegato alla nota. I campi
+   * restano nulli per le note senza timer.
+   */
+  operator_name: string | null;
+  clockify_time_entry_id: string | null;
+  clockify_project_id: string | null;
+  timer_started_at: string | null;
+  timer_stopped_at: string | null;
+  duration_seconds: number | null;
 };
 
 export type CreateCustomerNoteInput = {
@@ -29,3 +40,12 @@ export type CreateCustomerNoteInput = {
   messageCreatedAt: string;
   body: string;
 };
+
+export function isNoteTimerRunning(
+  note: CustomerNote,
+): boolean {
+  return (
+    note.clockify_time_entry_id !== null &&
+    note.timer_stopped_at === null
+  );
+}

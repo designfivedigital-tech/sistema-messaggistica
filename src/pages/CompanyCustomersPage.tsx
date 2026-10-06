@@ -11,7 +11,15 @@ import {
   getCustomerCategoryLabel,
   type CustomerCategory,
 } from "../features/customers/customerCategory";
-import type { CustomerNote } from "../features/customers/customerNote";
+import {
+  isNoteTimerRunning,
+  type CustomerNote,
+} from "../features/customers/customerNote";
+import { ClockifySettingsDialog } from "../features/clockify/ClockifySettingsDialog";
+import {
+  useClockifyTimerSync,
+  useCustomerClockifyProjects,
+} from "../features/clockify/useClockify";
 import { useCustomerCategories } from "../features/customers/useCustomerCategories";
 import { useCustomerNotes } from "../features/customers/useCustomerNotes";
 import { useConversationStore } from "../stores/conversationStore";
@@ -49,6 +57,11 @@ export default function CompanyCustomersPage() {
   const [selectedCustomerId, setSelectedCustomerId] =
     useState<string | null>(null);
 
+  const [
+    isClockifySettingsOpen,
+    setIsClockifySettingsOpen,
+  ] = useState(false);
+
   const selectConversation =
     useConversationStore(
       (state) => state.selectConversation,
@@ -74,6 +87,13 @@ export default function CompanyCustomersPage() {
     isError: isNotesError,
     error: notesError,
   } = useCustomerNotes();
+
+  const { data: customerClockifyProjects = [] } =
+    useCustomerClockifyProjects();
+
+  useClockifyTimerSync(
+    customerNotes.some(isNoteTimerRunning),
+  );
 
   /*
    * Una scheda per cliente: l'elenco dei clienti
@@ -214,6 +234,16 @@ export default function CompanyCustomersPage() {
               Senza categoria
             </option>
           </select>
+
+          <button
+            type="button"
+            className="customers-page__clockify"
+            onClick={() =>
+              setIsClockifySettingsOpen(true)
+            }
+          >
+            Clockify
+          </button>
         </div>
       </header>
 
@@ -315,6 +345,14 @@ export default function CompanyCustomersPage() {
         )}
       </main>
 
+      {isClockifySettingsOpen && (
+        <ClockifySettingsDialog
+          onClose={() =>
+            setIsClockifySettingsOpen(false)
+          }
+        />
+      )}
+
       {selectedCustomer && (
         <CustomerDetailDialog
           key={
@@ -322,6 +360,14 @@ export default function CompanyCustomersPage() {
           }
           conversation={selectedCustomer.conversation}
           category={selectedCustomer.category}
+          clockifyProject={
+            customerClockifyProjects.find(
+              (project) =>
+                project.customer_id ===
+                selectedCustomer.conversation
+                  .customer_id,
+            ) ?? null
+          }
           notes={selectedCustomer.notes}
           notesErrorMessage={
             isNotesError

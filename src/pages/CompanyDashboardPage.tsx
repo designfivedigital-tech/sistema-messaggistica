@@ -25,6 +25,12 @@ import { useDeleteConversation } from "../features/conversations/useDeleteConver
 import { CompanySectionTabs } from "../features/customers/CompanySectionTabs";
 import { CustomerCategoryDialog } from "../features/customers/CustomerCategoryDialog";
 import { CustomerNoteDialog } from "../features/customers/CustomerNoteDialog";
+import { isNoteTimerRunning } from "../features/customers/customerNote";
+import { useCustomerNotes } from "../features/customers/useCustomerNotes";
+import {
+  useClockifyTimerSync,
+  useStopClockifyTimer,
+} from "../features/clockify/useClockify";
 import type { ChatMessage } from "../features/messages/types";
 import {
   CUSTOMER_CATEGORIES,
@@ -250,6 +256,24 @@ const filteredConversations =
           selectedConversation.customer_id,
         )
       : null;
+
+  const { data: customerNotes = [] } =
+    useCustomerNotes();
+
+  const stopTimerMutation = useStopClockifyTimer();
+
+  useClockifyTimerSync(
+    customerNotes.some(isNoteTimerRunning),
+  );
+
+  const runningTimerNote = selectedConversation
+    ? (customerNotes.find(
+        (note) =>
+          note.customer_id ===
+            selectedConversation.customer_id &&
+          isNoteTimerRunning(note),
+      ) ?? null)
+    : null;
 
   const {
     data: messages = [],
@@ -1144,6 +1168,51 @@ async function handleDeleteConversation() {
                 </div>
 
               </header>
+
+              {runningTimerNote && (
+                <div
+                  className="chat-timer-banner"
+                  role="status"
+                >
+                  <span className="chat-timer-banner__text">
+                    <strong>● Timer in corso</strong>
+                    {runningTimerNote.operator_name &&
+                      ` · ${runningTimerNote.operator_name}`}
+                    {" · "}
+                    {runningTimerNote.body}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      stopTimerMutation.mutate(
+                        runningTimerNote.id,
+                      )
+                    }
+                    disabled={
+                      stopTimerMutation.isPending
+                    }
+                  >
+                    {stopTimerMutation.isPending
+                      ? "..."
+                      : "Ferma"}
+                  </button>
+                </div>
+              )}
+
+              {stopTimerMutation.isError && (
+                <div
+                  className="chat-timer-banner chat-timer-banner--error"
+                  role="alert"
+                >
+                  <span className="chat-timer-banner__text">
+                    {stopTimerMutation.error instanceof
+                    Error
+                      ? stopTimerMutation.error.message
+                      : "Impossibile fermare il timer."}
+                  </span>
+                </div>
+              )}
 
               <div className="company-chat-panel__messages">
                 <MessageList
