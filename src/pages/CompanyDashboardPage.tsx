@@ -674,6 +674,16 @@ async function handleDeleteConversation() {
 
             <button
               type="button"
+              className="company-header__customers"
+              onClick={() =>
+                navigate("/azienda/clienti")
+              }
+            >
+              Clienti
+            </button>
+
+            <button
+              type="button"
               className="company-header__logout"
               onClick={handleLogout}
             >

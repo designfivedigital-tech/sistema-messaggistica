@@ -5,6 +5,39 @@ import type {
   CustomerNote,
 } from "./customerNote";
 
+export async function getCustomerNotes(): Promise<
+  CustomerNote[]
+> {
+  const { data, error } = await supabase
+    .from("customer_notes")
+    .select(
+      `
+        id,
+        customer_id,
+        conversation_id,
+        message_id,
+        message_body,
+        body,
+        created_by,
+        created_at
+      `,
+    )
+    .order("created_at", {
+      ascending: false,
+    });
+
+  if (error) {
+    console.error(
+      "Errore recupero note clienti:",
+      error,
+    );
+
+    throw error;
+  }
+
+  return (data as CustomerNote[] | null) ?? [];
+}
+
 export async function createCustomerNote({
   customerId,
   conversationId,

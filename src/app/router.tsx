@@ -4,6 +4,7 @@ import ProtectedRoute from "../features/auth/ProtectedRoute";
 import RoleRoute from "../features/auth/RoleRoute";
 import ProfilePage from "../pages/ProfilePage";
 import AuthRedirectPage from "../pages/AuthRedirectPage";
+import CompanyCustomersPage from "../pages/CompanyCustomersPage";
 import CompanyDashboardPage from "../pages/CompanyDashboardPage";
 import CustomerChatPage from "../pages/CustomerChatPage";
 import LoginPage from "../pages/LoginPage";
@@ -44,6 +45,16 @@ export default function AppRouter() {
           </RoleRoute>
         }
       />
+
+      <Route
+        path="/azienda/clienti"
+        element={
+          <RoleRoute allowedRole="company">
+            <CompanyCustomersPage />
+          </RoleRoute>
+        }
+      />
+
       <Route
         path="/profilo"
         element={
