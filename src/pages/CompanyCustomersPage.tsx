@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
+import { CompanySectionTabs } from "../features/customers/CompanySectionTabs";
 import type { CompanyConversation } from "../features/conversations/types";
 import { useCompanyConversations } from "../features/conversations/useCompanyConversations";
+import { CustomerAvatar } from "../features/customers/CustomerAvatar";
+import { CustomerDetailDialog } from "../features/customers/CustomerDetailDialog";
 import {
   CUSTOMER_CATEGORIES,
   getCustomerCategoryLabel,
@@ -24,37 +27,6 @@ type CustomerCard = {
   notes: CustomerNote[];
 };
 
-const CONVERSATION_STATUS_LABELS = {
-  new: "Nuova",
-  in_progress: "In lavorazione",
-  closed: "Chiusa",
-} as const;
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("it-IT", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("it-IT", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-}
-
-function formatWebsite(value: string) {
-  return value
-    .replace(/^https?:\/\//i, "")
-    .replace(/^www\./i, "")
-    .replace(/\/$/, "");
-}
-
 function getErrorMessage(
   error: unknown,
   fallback: string,
@@ -64,31 +36,6 @@ function getErrorMessage(
     "message" in error
     ? String(error.message)
     : fallback;
-}
-
-function CustomerAvatar({
-  conversation,
-}: {
-  conversation: CompanyConversation;
-}) {
-  const { avatar_url, display_name } =
-    conversation.customer;
-
-  return (
-    <div className="customers-avatar">
-      {avatar_url ? (
-        <img
-          src={avatar_url}
-          alt={`Avatar di ${display_name}`}
-        />
-      ) : (
-        display_name
-          .trim()
-          .charAt(0)
-          .toUpperCase() || "C"
-      )}
-    </div>
-  );
 }
 
 export default function CompanyCustomersPage() {
@@ -213,12 +160,7 @@ export default function CompanyCustomersPage() {
     <div className="customers-page">
       <header className="customers-page__header">
         <div>
-          <Link
-            to="/azienda"
-            className="customers-page__back"
-          >
-            ← Conversazioni
-          </Link>
+          <CompanySectionTabs />
 
           <h1>Clienti</h1>
 
@@ -321,7 +263,13 @@ export default function CompanyCustomersPage() {
                   }
                 >
                   <CustomerAvatar
-                    conversation={conversation}
+                    displayName={
+                      conversation.customer
+                        .display_name
+                    }
+                    avatarUrl={
+                      conversation.customer.avatar_url
+                    }
                   />
 
                   <strong className="customer-card__name">
@@ -364,189 +312,28 @@ export default function CompanyCustomersPage() {
       </main>
 
       {selectedCustomer && (
-        <div
-          className="customer-detail"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (
-              event.target === event.currentTarget
-            ) {
-              setSelectedCustomerId(null);
-            }
-          }}
-        >
-          <div
-            className="customer-detail__card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="customer-detail-title"
-          >
-            <button
-              type="button"
-              className="customer-detail__close"
-              onClick={() =>
-                setSelectedCustomerId(null)
-              }
-              aria-label="Chiudi scheda cliente"
-              title="Chiudi"
-            >
-              ×
-            </button>
-
-            <div className="customer-detail__identity">
-              <CustomerAvatar
-                conversation={
-                  selectedCustomer.conversation
-                }
-              />
-
-              <div>
-                <h2 id="customer-detail-title">
-                  {
-                    selectedCustomer.conversation
-                      .customer.display_name
-                  }
-                </h2>
-
-                {selectedCustomer.category && (
-                  <span className="customer-category-badge customer-category-badge--static">
-                    {getCustomerCategoryLabel(
-                      selectedCustomer.category,
-                    )}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <dl className="customer-detail__info">
-              <div>
-                <dt>Email</dt>
-                <dd>
-                  {selectedCustomer.conversation
-                    .customer.email ? (
-                    <a
-                      href={`mailto:${selectedCustomer.conversation.customer.email}`}
-                    >
-                      {
-                        selectedCustomer.conversation
-                          .customer.email
-                      }
-                    </a>
-                  ) : (
-                    "Non disponibile"
-                  )}
-                </dd>
-              </div>
-
-              <div>
-                <dt>Sito web</dt>
-                <dd>
-                  {selectedCustomer.conversation
-                    .customer.website_url ? (
-                    <a
-                      href={
-                        selectedCustomer.conversation
-                          .customer.website_url
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {formatWebsite(
-                        selectedCustomer.conversation
-                          .customer.website_url,
-                      )}
-                    </a>
-                  ) : (
-                    "Non disponibile"
-                  )}
-                </dd>
-              </div>
-
-              <div>
-                <dt>Categoria</dt>
-                <dd>
-                  {selectedCustomer.category
-                    ? getCustomerCategoryLabel(
-                        selectedCustomer.category,
-                      )
-                    : "Senza categoria"}
-                </dd>
-              </div>
-
-              <div>
-                <dt>Conversazione</dt>
-                <dd>
-                  {
-                    CONVERSATION_STATUS_LABELS[
-                      selectedCustomer.conversation
-                        .status
-                    ]
-                  }
-                </dd>
-              </div>
-
-              <div>
-                <dt>Prima conversazione</dt>
-                <dd>
-                  {formatDate(
-                    selectedCustomer.conversation
-                      .created_at,
-                  )}
-                </dd>
-              </div>
-            </dl>
-
-            <button
-              type="button"
-              className="customer-detail__open-chat"
-              onClick={() =>
-                handleOpenChat(
-                  selectedCustomer.conversation.id,
-                )
-              }
-            >
-              Apri chat
-            </button>
-
-            <h3>
-              Note ({selectedCustomer.notes.length})
-            </h3>
-
-            {isNotesError && (
-              <p className="customer-detail__error">
-                {getErrorMessage(
+        <CustomerDetailDialog
+          key={
+            selectedCustomer.conversation.customer_id
+          }
+          conversation={selectedCustomer.conversation}
+          category={selectedCustomer.category}
+          notes={selectedCustomer.notes}
+          notesErrorMessage={
+            isNotesError
+              ? getErrorMessage(
                   notesError,
                   "Impossibile recuperare le note.",
-                )}
-              </p>
-            )}
-
-            {!isNotesError &&
-              selectedCustomer.notes.length === 0 && (
-                <p className="customer-detail__empty">
-                  Nessuna nota per questo cliente.
-                </p>
-              )}
-
-            <ul className="customer-detail__notes">
-              {selectedCustomer.notes.map((note) => (
-                <li key={note.id}>
-                  <time dateTime={note.created_at}>
-                    {formatDateTime(note.created_at)}
-                  </time>
-
-                  {note.message_body && (
-                    <blockquote className="customer-note-dialog__quote">
-                      {note.message_body}
-                    </blockquote>
-                  )}
-
-                  <p>{note.body}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+                )
+              : null
+          }
+          onOpenChat={() =>
+            handleOpenChat(
+              selectedCustomer.conversation.id,
+            )
+          }
+          onClose={() => setSelectedCustomerId(null)}
+        />
       )}
     </div>
   );

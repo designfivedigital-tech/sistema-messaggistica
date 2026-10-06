@@ -5676,23 +5676,6 @@ z-index: 100;
    DASHBOARD CLIENTI
    ========================================================= */
 
-.company-header__customers {
-  min-height: 42px;
-  padding: 0 18px;
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #172033;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.company-header__customers:hover {
-  border-color: #98a2b3;
-  background: #f2f4f7;
-}
-
 .customers-page {
   display: flex;
   width: 100%;
@@ -5713,13 +5696,6 @@ z-index: 100;
   padding: 18px 32px;
   border-bottom: 1px solid #e4e8ef;
   background: #ffffff;
-}
-
-.customers-page__back {
-  color: var(--five-pink, #e20074);
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-decoration: none;
 }
 
 .customers-page__header h1 {
@@ -6062,5 +6038,164 @@ z-index: 100;
 
   .customer-detail__info {
     grid-template-columns: 1fr;
+  }
+}
+
+.company-section-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #ededf0;
+}
+
+.company-sidebar .company-section-tabs {
+  margin: 0 16px 12px;
+}
+
+.customers-page__header .company-section-tabs {
+  width: 220px;
+  max-width: 100%;
+}
+
+.company-section-tabs__tab {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: #475467;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.company-section-tabs__tab:hover {
+  color: #111;
+}
+
+.company-section-tabs__tab--active {
+  background: #ffffff;
+  color: var(--five-pink-dark, #b9005f);
+  box-shadow: 0 1px 4px rgba(23, 32, 51, 0.12);
+}
+
+/*
+ * Scheda cliente: riepilogo fisso in alto,
+ * elenco delle note scorrevole sotto.
+ */
+.customer-detail__card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.customer-detail__summary {
+  position: relative;
+  flex-shrink: 0;
+  padding: 26px 26px 14px;
+  border-bottom: 1px solid #e4e8ef;
+}
+
+.customer-detail__notes-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.customer-detail__card .customer-detail__notes-header h3 {
+  margin: 0;
+}
+
+.customer-detail__notes-header input {
+  min-width: 0;
+  height: 38px;
+  flex: 1 1 180px;
+  max-width: 260px;
+  padding: 0 12px;
+  border: 1px solid #dedee3;
+  border-radius: 10px;
+  outline: none;
+  background: #f7f7f8;
+  color: #111;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.customer-detail__notes-header input:focus {
+  border-color: #e20074;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(226, 0, 116, 0.12);
+}
+
+.customer-detail__notes-scroll {
+  min-height: 200px;
+  flex: 1 1 auto;
+  padding: 14px 26px 26px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.customer-detail__notes-group + .customer-detail__notes-group {
+  margin-top: 18px;
+}
+
+.customer-detail__notes-group h4 {
+  margin: 0 0 8px;
+  color: #667085;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.customer-detail__more {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customer-detail__more:hover {
+  border-color: #98a2b3;
+  background: #f2f4f7;
+}
+
+@media (max-width: 760px) {
+  .customer-detail__summary {
+    padding: 22px 18px 12px;
+  }
+
+  .customer-detail__notes-scroll {
+    padding: 12px 18px 22px;
+  }
+
+  .customer-detail__info {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+    gap: 10px 14px;
+    margin: 14px 0;
+  }
+
+  .customer-detail__notes-header {
+    margin-top: 16px;
+  }
+
+  .customer-detail__notes-header input {
+    max-width: none;
   }
 }

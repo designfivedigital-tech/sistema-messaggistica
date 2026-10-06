@@ -22,6 +22,7 @@ import { useTypingPresence } from "../features/messages/useTypingPresence";
 import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
 import { useConversationStore } from "../stores/conversationStore";
 import { useDeleteConversation } from "../features/conversations/useDeleteConversation";
+import { CompanySectionTabs } from "../features/customers/CompanySectionTabs";
 import { CustomerCategoryDialog } from "../features/customers/CustomerCategoryDialog";
 import { CustomerNoteDialog } from "../features/customers/CustomerNoteDialog";
 import type { ChatMessage } from "../features/messages/types";
@@ -674,16 +675,6 @@ async function handleDeleteConversation() {
 
             <button
               type="button"
-              className="company-header__customers"
-              onClick={() =>
-                navigate("/azienda/clienti")
-              }
-            >
-              Clienti
-            </button>
-
-            <button
-              type="button"
               className="company-header__logout"
               onClick={handleLogout}
             >
@@ -730,6 +721,8 @@ async function handleDeleteConversation() {
               ↻
             </button>
           </div>
+
+          <CompanySectionTabs />
 
           <div className="conversation-search">
             <span
