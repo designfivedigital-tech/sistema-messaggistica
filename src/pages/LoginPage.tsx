@@ -41,7 +41,7 @@ export default function LoginPage() {
       <section className="auth-card">
         <div className="auth-card__header">
           <span className="auth-card__eyebrow">
-            Sistema Messaggistica
+            Assistenza Five Digital
           </span>
 
           <h1>Bentornato</h1>

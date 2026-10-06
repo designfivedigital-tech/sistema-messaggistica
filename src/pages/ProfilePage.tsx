@@ -151,10 +151,17 @@ export default function ProfilePage() {
   ) {
     event.preventDefault();
 
+    /*
+     * Il nome dei clienti è gestito dall'azienda
+     * e non viene inviato con le modifiche.
+     */
+    const canEditName =
+      profile?.role !== "customer";
+
     const normalizedDisplayName =
       displayName.trim();
 
-    if (!normalizedDisplayName) {
+    if (canEditName && !normalizedDisplayName) {
       setFormError(
         "Inserisci un nome visualizzato.",
       );
@@ -187,7 +194,9 @@ export default function ProfilePage() {
       }
 
       await updateProfileMutation.mutateAsync({
-        displayName: normalizedDisplayName,
+        displayName: canEditName
+          ? normalizedDisplayName
+          : undefined,
         websiteUrl: normalizedWebsiteUrl,
         avatarUrl: uploadedAvatarUrl,
       });
@@ -251,6 +260,8 @@ export default function ProfilePage() {
   const isSaving =
     updateProfileMutation.isPending;
 
+  const isCustomer = profile.role === "customer";
+
   const profileInitial =
     displayName
       .trim()
@@ -278,8 +289,9 @@ export default function ProfilePage() {
             <h1>Il tuo profilo</h1>
 
             <p>
-              Personalizza il nome, l’avatar e il
-              riferimento al tuo sito web.
+              {isCustomer
+                ? "Personalizza l’avatar e il riferimento al tuo sito web."
+                : "Personalizza il nome, l’avatar e il riferimento al tuo sito web."}
             </p>
           </div>
         </header>
@@ -341,13 +353,14 @@ export default function ProfilePage() {
                 }
                 maxLength={80}
                 autoComplete="name"
-                disabled={isSaving}
+                disabled={isSaving || isCustomer}
                 required
               />
 
               <small>
-                Questo nome verrà mostrato nella
-                chat.
+                {isCustomer
+                  ? "Il nome è gestito dall’azienda: per modificarlo contattala in chat."
+                  : "Questo nome verrà mostrato nella chat."}
               </small>
             </label>
 

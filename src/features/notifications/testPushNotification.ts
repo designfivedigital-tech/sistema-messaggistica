@@ -41,7 +41,7 @@ export async function sendTestPushNotification(): Promise<TestPushResult> {
 
         body: {
           recipientUserId: userId,
-          title: "Sistema Messaggistica",
+          title: "Assistenza Five Digital",
           body: "La notifica push funziona correttamente.",
           url: "/",
           tag: `push-test-${Date.now()}`,

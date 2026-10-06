@@ -101,9 +101,17 @@ self.addEventListener(
           payload.icon ??
           "/pwa-192x192.png",
 
+        /*
+         * Android mostra il badge in un solo
+         * colore: serve l'icona monocromatica,
+         * anche se il server indica ancora
+         * quella a colori.
+         */
         badge:
-          payload.badge ??
-          "/pwa-192x192.png",
+          payload.badge &&
+          payload.badge !== "/pwa-192x192.png"
+            ? payload.badge
+            : "/notification-badge.png",
 
         tag:
           payload.tag ??
@@ -208,7 +216,7 @@ function readPushPayload(
       body:
         "Hai ricevuto un nuovo messaggio.",
       icon: "/pwa-192x192.png",
-      badge: "/pwa-192x192.png",
+      badge: "/notification-badge.png",
       tag: "new-message",
       renotify: true,
       requireInteraction: false,

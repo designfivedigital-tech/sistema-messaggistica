@@ -59,25 +59,28 @@ export async function updateCurrentProfile({
     throw new Error("Utente non autenticato.");
   }
 
-  const normalizedDisplayName =
-    displayName.trim();
-
-  if (!normalizedDisplayName) {
-    throw new Error(
-      "Il nome utente non può essere vuoto.",
-    );
-  }
-
   const updates: {
-    display_name: string;
+    display_name?: string;
     website_url: string | null;
     avatar_url?: string | null;
     updated_at: string;
   } = {
-    display_name: normalizedDisplayName,
     website_url: websiteUrl?.trim() || null,
     updated_at: new Date().toISOString(),
   };
+
+  if (displayName !== undefined) {
+    const normalizedDisplayName =
+      displayName.trim();
+
+    if (!normalizedDisplayName) {
+      throw new Error(
+        "Il nome utente non può essere vuoto.",
+      );
+    }
+
+    updates.display_name = normalizedDisplayName;
+  }
 
   if (avatarUrl !== undefined) {
     updates.avatar_url = avatarUrl;

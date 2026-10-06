@@ -690,7 +690,7 @@ async function handleDeleteConversation() {
         <header className="company-header">
           <div className="company-header__identity">
             <span className="company-header__eyebrow">
-              Sistema Messaggistica
+              Assistenza Five Digital
             </span>
 
             <h1>Conversazioni clienti</h1>

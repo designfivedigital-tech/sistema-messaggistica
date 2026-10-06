@@ -53,7 +53,7 @@ type DeliveryResult = {
 };
 
 const DEFAULT_ICON = "/pwa-192x192.png";
-const DEFAULT_BADGE = "/pwa-192x192.png";
+const DEFAULT_BADGE = "/notification-badge.png";
 
 const MAX_TITLE_LENGTH = 80;
 const MAX_BODY_LENGTH = 240;

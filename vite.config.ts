@@ -17,20 +17,22 @@ export default defineConfig({
       injectRegister: false,
 
       includeAssets: [
-        "favicon.svg",
+        "favicon.png",
+        "apple-touch-icon.png",
+        "notification-badge.png",
         "pwa-192x192.png",
         "pwa-512x512.png",
         "maskable-icon-512x512.png",
       ],
 
       manifest: {
-        name: "Sistema Messaggistica",
-        short_name: "Messaggi",
+        name: "Assistenza Five Digital",
+        short_name: "Five Digital",
         description:
-          "Sistema di messaggistica tra azienda e clienti.",
+          "Assistenza clienti Five Digital.",
 
-        theme_color: "#172033",
-        background_color: "#f5f7fa",
+        theme_color: "#e20074",
+        background_color: "#e20074",
 
         display: "standalone",
         orientation: "portrait-primary",

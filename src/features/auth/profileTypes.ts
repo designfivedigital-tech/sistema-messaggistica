@@ -11,7 +11,11 @@ export type Profile = {
 };
 
 export type UpdateProfileInput = {
-  displayName: string;
+  /*
+   * Da omettere per i clienti: il loro nome
+   * è gestito dall'azienda.
+   */
+  displayName?: string;
   websiteUrl: string | null;
   avatarUrl?: string | null;
 };
