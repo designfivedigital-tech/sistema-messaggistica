@@ -38,6 +38,7 @@ type CustomerDetailDialogProps = {
   notesErrorMessage: string | null;
 
   onOpenChat: () => void;
+  onResetPassword: () => void;
 
   /* Apre la chat sul messaggio annotato. */
   onOpenMessage: (note: CustomerNote) => void;
@@ -289,6 +290,7 @@ export function CustomerDetailDialog({
   notes,
   notesErrorMessage,
   onOpenChat,
+  onResetPassword,
   onOpenMessage,
   onClose,
 }: CustomerDetailDialogProps) {
@@ -583,6 +585,14 @@ export function CustomerDetailDialog({
               onClick={onOpenChat}
             >
               Apri chat
+            </button>
+
+            <button
+              type="button"
+              className="customer-detail__secondary"
+              onClick={onResetPassword}
+            >
+              Reimposta password
             </button>
 
             {clockifyProject && (

@@ -6508,3 +6508,20 @@ z-index: 100;
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
 }
+
+.customer-detail__secondary {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customer-detail__secondary:hover {
+  border-color: #98a2b3;
+  background: #f2f4f7;
+}

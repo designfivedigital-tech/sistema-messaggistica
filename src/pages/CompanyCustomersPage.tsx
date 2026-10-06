@@ -16,6 +16,7 @@ import {
   type CustomerNote,
 } from "../features/customers/customerNote";
 import { RegisterCustomerDialog } from "../features/customers/RegisterCustomerDialog";
+import { ResetCustomerPasswordDialog } from "../features/customers/ResetCustomerPasswordDialog";
 import { ClockifySettingsDialog } from "../features/clockify/ClockifySettingsDialog";
 import {
   useClockifyTimerSync,
@@ -67,6 +68,9 @@ export default function CompanyCustomersPage() {
     isRegisterDialogOpen,
     setIsRegisterDialogOpen,
   ] = useState(false);
+
+  const [isResetPasswordOpen, setIsResetPasswordOpen] =
+    useState(false);
 
   const selectConversation =
     useConversationStore(
@@ -377,7 +381,26 @@ export default function CompanyCustomersPage() {
         />
       )}
 
-      {selectedCustomer && (
+      {/*
+       * La finestra della password sostituisce
+       * la scheda cliente invece di sovrapporsi.
+       */}
+      {selectedCustomer && isResetPasswordOpen && (
+        <ResetCustomerPasswordDialog
+          customerId={
+            selectedCustomer.conversation.customer_id
+          }
+          customerName={
+            selectedCustomer.conversation.customer
+              .display_name
+          }
+          onClose={() =>
+            setIsResetPasswordOpen(false)
+          }
+        />
+      )}
+
+      {selectedCustomer && !isResetPasswordOpen && (
         <CustomerDetailDialog
           key={
             selectedCustomer.conversation.customer_id
@@ -405,6 +428,9 @@ export default function CompanyCustomersPage() {
             handleOpenChat(
               selectedCustomer.conversation.id,
             )
+          }
+          onResetPassword={() =>
+            setIsResetPasswordOpen(true)
           }
           onOpenMessage={(note) => {
             if (

@@ -118,6 +118,80 @@ export default {
           );
         }
 
+        /*
+         * Reimpostazione della password di un
+         * cliente già registrato.
+         */
+        if (
+          readString(input?.action) ===
+          "reset-password"
+        ) {
+          const targetCustomerId = readString(
+            input?.customerId,
+          );
+
+          const newPassword =
+            typeof input?.password === "string"
+              ? input.password
+              : "";
+
+          if (!targetCustomerId) {
+            throw new HttpError(
+              400,
+              "customerId è obbligatorio",
+            );
+          }
+
+          if (
+            newPassword.length < MIN_PASSWORD_LENGTH
+          ) {
+            throw new HttpError(
+              400,
+              `La password deve contenere almeno ${MIN_PASSWORD_LENGTH} caratteri`,
+            );
+          }
+
+          const { data: targetProfile } = await admin
+            .from("profiles")
+            .select("role")
+            .eq("id", targetCustomerId)
+            .maybeSingle();
+
+          /*
+           * Da qui si può cambiare solo la password
+           * dei clienti, mai quella dell'azienda.
+           */
+          if (targetProfile?.role !== "customer") {
+            throw new HttpError(
+              404,
+              "Cliente non trovato",
+            );
+          }
+
+          const { data: updated, error: updateError } =
+            await admin.auth.admin.updateUserById(
+              targetCustomerId,
+              { password: newPassword },
+            );
+
+          if (updateError || !updated?.user) {
+            console.error("Password reset failed", {
+              message: updateError?.message,
+            });
+
+            throw new HttpError(
+              500,
+              "Impossibile reimpostare la password",
+            );
+          }
+
+          return jsonResponse({
+            customerId: targetCustomerId,
+            email: updated.user.email ?? "",
+            warnings: [],
+          });
+        }
+
         const displayName = readString(
           input?.displayName,
         ).slice(0, MAX_NAME_LENGTH);

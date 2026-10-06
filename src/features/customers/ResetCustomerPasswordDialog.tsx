@@ -1,38 +1,28 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useMutation } from "@tanstack/react-query";
 
-import {
-  CUSTOMER_CATEGORIES,
-  isCustomerCategory,
-  type CustomerCategory,
-} from "./customerCategory";
 import {
   generatePassword,
   MIN_PASSWORD_LENGTH,
+  resetCustomerPassword,
   type RegisterCustomerResult,
 } from "./registerCustomerService";
-import { useRegisterCustomer } from "./useRegisterCustomer";
 
-type RegisterCustomerDialogProps = {
+type ResetCustomerPasswordDialogProps = {
+  customerId: string;
+  customerName: string;
   onClose: () => void;
 };
 
-export function RegisterCustomerDialog({
+export function ResetCustomerPasswordDialog({
+  customerId,
+  customerName,
   onClose,
-}: RegisterCustomerDialogProps) {
-  const [displayName, setDisplayName] =
-    useState("");
-
-  const [email, setEmail] = useState("");
-
+}: ResetCustomerPasswordDialogProps) {
   const [password, setPassword] = useState(
     generatePassword,
   );
-
-  const [websiteUrl, setWebsiteUrl] = useState("");
-
-  const [category, setCategory] =
-    useState<CustomerCategory | null>(null);
 
   const [errorMessage, setErrorMessage] =
     useState<string | null>(null);
@@ -42,17 +32,12 @@ export function RegisterCustomerDialog({
 
   const [copied, setCopied] = useState(false);
 
-  const registerMutation = useRegisterCustomer();
+  const resetMutation = useMutation({
+    mutationFn: () =>
+      resetCustomerPassword(customerId, password),
+  });
 
-  const isSaving = registerMutation.isPending;
-
-  function handleClose() {
-    if (isSaving) {
-      return;
-    }
-
-    onClose();
-  }
+  const isSaving = resetMutation.isPending;
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
@@ -69,21 +54,12 @@ export function RegisterCustomerDialog({
 
     try {
       setErrorMessage(null);
-
-      setResult(
-        await registerMutation.mutateAsync({
-          displayName: displayName.trim(),
-          email: email.trim(),
-          password,
-          websiteUrl: websiteUrl.trim(),
-          category,
-        }),
-      );
-    } catch (registerError) {
+      setResult(await resetMutation.mutateAsync());
+    } catch (resetError) {
       setErrorMessage(
-        registerError instanceof Error
-          ? registerError.message
-          : "Impossibile registrare il cliente.",
+        resetError instanceof Error
+          ? resetError.message
+          : "Impossibile reimpostare la password.",
       );
     }
   }
@@ -114,16 +90,17 @@ export function RegisterCustomerDialog({
           className="customer-category-dialog__card"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="register-customer-title"
+          aria-labelledby="reset-password-title"
         >
-          <h2 id="register-customer-title">
-            Cliente registrato
+          <h2 id="reset-password-title">
+            Password reimpostata
           </h2>
 
           <p>
-            Comunica al cliente queste credenziali:
-            la password non sarà più visibile dopo
-            la chiusura.
+            Comunica a{" "}
+            <strong>{customerName}</strong> le nuove
+            credenziali: la password non sarà più
+            visibile dopo la chiusura.
           </p>
 
           <dl className="register-customer__credentials">
@@ -137,13 +114,6 @@ export function RegisterCustomerDialog({
               <dd>{password}</dd>
             </div>
           </dl>
-
-          {result.warnings.length > 0 && (
-            <p className="customer-category-dialog__error">
-              Account creato, ma con qualche
-              problema: {result.warnings.join("; ")}.
-            </p>
-          )}
 
           <div className="customer-category-dialog__actions">
             <button
@@ -176,8 +146,11 @@ export function RegisterCustomerDialog({
       className="customer-category-dialog"
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          handleClose();
+        if (
+          event.target === event.currentTarget &&
+          !isSaving
+        ) {
+          onClose();
         }
       }}
     >
@@ -185,55 +158,28 @@ export function RegisterCustomerDialog({
         className="customer-category-dialog__card"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="register-customer-title"
+        aria-labelledby="reset-password-title"
         onSubmit={(event) =>
           void handleSubmit(event)
         }
       >
-        <h2 id="register-customer-title">
-          Registra cliente
+        <h2 id="reset-password-title">
+          Reimposta password
         </h2>
 
-        <label htmlFor="register-customer-name">
-          Nome del cliente
-        </label>
+        <p>
+          La password attuale di{" "}
+          <strong>{customerName}</strong> smetterà
+          di funzionare.
+        </p>
 
-        <input
-          id="register-customer-name"
-          type="text"
-          value={displayName}
-          onChange={(event) =>
-            setDisplayName(event.target.value)
-          }
-          autoComplete="off"
-          required
-          autoFocus
-          disabled={isSaving}
-        />
-
-        <label htmlFor="register-customer-email">
-          Email
-        </label>
-
-        <input
-          id="register-customer-email"
-          type="email"
-          value={email}
-          onChange={(event) =>
-            setEmail(event.target.value)
-          }
-          autoComplete="off"
-          required
-          disabled={isSaving}
-        />
-
-        <label htmlFor="register-customer-password">
-          Password
+        <label htmlFor="reset-password-value">
+          Nuova password
         </label>
 
         <div className="register-customer__password">
           <input
-            id="register-customer-password"
+            id="reset-password-value"
             type="text"
             value={password}
             onChange={(event) =>
@@ -256,51 +202,6 @@ export function RegisterCustomerDialog({
           </button>
         </div>
 
-        <label htmlFor="register-customer-website">
-          Sito web (facoltativo)
-        </label>
-
-        <input
-          id="register-customer-website"
-          type="text"
-          inputMode="url"
-          value={websiteUrl}
-          onChange={(event) =>
-            setWebsiteUrl(event.target.value)
-          }
-          placeholder="esempio.it"
-          autoComplete="off"
-          disabled={isSaving}
-        />
-
-        <label htmlFor="register-customer-category">
-          Categoria (facoltativa)
-        </label>
-
-        <select
-          id="register-customer-category"
-          value={category ?? ""}
-          onChange={(event) =>
-            setCategory(
-              isCustomerCategory(event.target.value)
-                ? event.target.value
-                : null,
-            )
-          }
-          disabled={isSaving}
-        >
-          <option value="">Nessuna categoria</option>
-
-          {CUSTOMER_CATEGORIES.map((option) => (
-            <option
-              key={option.value}
-              value={option.value}
-            >
-              {option.label}
-            </option>
-          ))}
-        </select>
-
         {errorMessage && (
           <p className="customer-category-dialog__error">
             {errorMessage}
@@ -311,7 +212,7 @@ export function RegisterCustomerDialog({
           <button
             type="button"
             className="customer-category-dialog__cancel"
-            onClick={handleClose}
+            onClick={onClose}
             disabled={isSaving}
           >
             Annulla
@@ -323,8 +224,8 @@ export function RegisterCustomerDialog({
             disabled={isSaving}
           >
             {isSaving
-              ? "Registrazione..."
-              : "Registra cliente"}
+              ? "Salvataggio..."
+              : "Reimposta password"}
           </button>
         </div>
       </form>
