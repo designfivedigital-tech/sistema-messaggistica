@@ -13,6 +13,7 @@ import { useAuth } from "../features/auth/useAuth";
 import { useProfile } from "../features/auth/useProfile";
 import ConversationList from "../features/conversations/ConversationList";
 import { useCompanyConversations } from "../features/conversations/useCompanyConversations";
+import { useCompanyConversationsRealtime } from "../features/conversations/useCompanyConversationsRealtime";
 import MessageComposer from "../features/messages/MessageComposer";
 import MessageList from "../features/messages/MessageList";
 import { useMarkMessagesRead } from "../features/messages/useMarkMessagesRead";
@@ -281,6 +282,7 @@ const filteredConversations =
   } = useMessages(selectedConversationId);
 
   useMessagesRealtime(selectedConversationId);
+  useCompanyConversationsRealtime();
   useMarkMessagesRead(selectedConversationId);
 
   const {
