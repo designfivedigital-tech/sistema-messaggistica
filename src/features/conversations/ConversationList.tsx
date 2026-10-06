@@ -78,7 +78,17 @@ export default function ConversationList({
         const hasUnread =
           conversation.unread_count > 0;
 
-        
+        /*
+         * Una conversazione non ancora presa in
+         * carico resta segnalata anche dopo che
+         * i messaggi sono stati letti.
+         */
+        const isWaiting =
+          conversation.status === "new";
+
+        const badgeLabel = hasUnread
+          ? `${conversation.unread_count} messaggi non letti`
+          : "Da prendere in carico";
 
         const preview =
           getConversationPreview(conversation);
@@ -95,7 +105,7 @@ export default function ConversationList({
               isSelected
                 ? "conversation-item--selected"
                 : "",
-              hasUnread
+              hasUnread || isWaiting
                 ? "conversation-item--unread"
                 : "",
             ]
@@ -155,16 +165,18 @@ export default function ConversationList({
                   {preview}
                 </p>
 
-                {hasUnread && (
+                {(hasUnread || isWaiting) && (
                   <span
                     className="conversation-item__badge"
-                    aria-label={`${conversation.unread_count} messaggi non letti`}
-                    title={`${conversation.unread_count} messaggi non letti`}
+                    aria-label={badgeLabel}
+                    title={badgeLabel}
                   >
-                    {conversation.unread_count >
-                    99
-                      ? "99+"
-                      : conversation.unread_count}
+                    {!hasUnread
+                      ? "!"
+                      : conversation.unread_count >
+                          99
+                        ? "99+"
+                        : conversation.unread_count}
                   </span>
                 )}
               </div>
