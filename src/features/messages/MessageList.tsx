@@ -41,12 +41,59 @@ type MessageContextMenu = {
   y: number;
 };
 
+const FOCUSED_MESSAGE_SCROLL_DELAYS_MS = [
+  50, 300, 800, 1500,
+];
+const FOCUSED_MESSAGE_HIGHLIGHT_MS = 4000;
+
 /*
- * Il ritardo lascia terminare lo scorrimento
- * automatico verso l'ultimo messaggio.
+ * Centra il messaggio agendo solo sul contenitore
+ * scorrevole della chat. scrollIntoView sposterebbe
+ * anche i contenitori esterni della pagina,
+ * lasciando il messaggio fuori dalla vista.
  */
-const FOCUSED_MESSAGE_SCROLL_DELAY_MS = 350;
-const FOCUSED_MESSAGE_HIGHLIGHT_MS = 3000;
+function scrollMessageToCenter(
+  messageElement: HTMLElement,
+) {
+  let container = messageElement.parentElement;
+
+  while (container) {
+    const { overflowY } =
+      window.getComputedStyle(container);
+
+    if (
+      (overflowY === "auto" ||
+        overflowY === "scroll") &&
+      container.scrollHeight >
+        container.clientHeight
+    ) {
+      break;
+    }
+
+    container = container.parentElement;
+  }
+
+  if (!container) {
+    messageElement.scrollIntoView({
+      block: "center",
+    });
+
+    return;
+  }
+
+  const containerRect =
+    container.getBoundingClientRect();
+
+  const messageRect =
+    messageElement.getBoundingClientRect();
+
+  container.scrollTop +=
+    messageRect.top -
+    containerRect.top -
+    (container.clientHeight -
+      messageRect.height) /
+      2;
+}
 
 const LONG_PRESS_DELAY_MS = 500;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
@@ -356,6 +403,18 @@ export default function MessageList({
       : null;
 
   useEffect(() => {
+    /*
+     * Se è richiesto un messaggio preciso, lo
+     * scorrimento verso il fondo non deve
+     * interferire.
+     */
+    if (
+      useConversationStore.getState()
+        .focusedMessageId
+    ) {
+      return;
+    }
+
     bottomRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "end",
@@ -372,36 +431,37 @@ export default function MessageList({
       return;
     }
 
-    let clearTimer: number | null = null;
+    /*
+     * Il posizionamento viene ripetuto più volte:
+     * immagini e allegati che finiscono di
+     * caricarsi spostano i messaggi dopo il
+     * primo scorrimento.
+     */
+    const timers =
+      FOCUSED_MESSAGE_SCROLL_DELAYS_MS.map((delay) =>
+        window.setTimeout(() => {
+          const messageElement =
+            document.getElementById(
+              `message-${focusedMessageId}`,
+            );
 
-    const scrollTimer = window.setTimeout(() => {
-      const messageElement =
-        document.getElementById(
-          `message-${focusedMessageId}`,
-        );
+          if (messageElement) {
+            scrollMessageToCenter(messageElement);
+          }
+        }, delay),
+      );
 
-      if (!messageElement) {
-        clearFocusedMessage();
-        return;
-      }
-
-      messageElement.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      clearTimer = window.setTimeout(
+    timers.push(
+      window.setTimeout(
         clearFocusedMessage,
         FOCUSED_MESSAGE_HIGHLIGHT_MS,
-      );
-    }, FOCUSED_MESSAGE_SCROLL_DELAY_MS);
+      ),
+    );
 
     return () => {
-      window.clearTimeout(scrollTimer);
-
-      if (clearTimer !== null) {
-        window.clearTimeout(clearTimer);
-      }
+      timers.forEach((timer) =>
+        window.clearTimeout(timer),
+      );
     };
   }, [
     clearFocusedMessage,
