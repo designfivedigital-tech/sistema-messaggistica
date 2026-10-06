@@ -22,6 +22,9 @@ import { useTypingPresence } from "../features/messages/useTypingPresence";
 import { PushNotificationButton } from "../features/notifications/PushNotificationButton";
 import { useConversationStore } from "../stores/conversationStore";
 import { useDeleteConversation } from "../features/conversations/useDeleteConversation";
+import { CustomerCategoryDialog } from "../features/customers/CustomerCategoryDialog";
+import { getCustomerCategoryLabel } from "../features/customers/customerCategory";
+import { useCustomerCategories } from "../features/customers/useCustomerCategories";
 
 
 const MOBILE_MEDIA_QUERY = "(max-width: 760px)";
@@ -69,6 +72,11 @@ const [
   deleteConversationError,
   setDeleteConversationError,
 ] = useState<string | null>(null);
+
+const [
+  isCategoryDialogOpen,
+  setIsCategoryDialogOpen,
+] = useState(false);
 
 const conversationMenuRef =
   useRef<HTMLDivElement | null>(null);
@@ -174,6 +182,16 @@ const filteredConversations =
         conversation.id ===
         selectedConversationId,
     );
+
+  const { data: customerCategories = [] } =
+    useCustomerCategories();
+
+  const selectedCustomerCategory =
+    customerCategories.find(
+      (assignment) =>
+        assignment.customer_id ===
+        selectedConversation?.customer_id,
+    )?.category ?? null;
 
   const {
     data: messages = [],
@@ -466,6 +484,11 @@ const nextConversations =
   setDeleteConversationConfirmation("");
   setDeleteConversationError(null);
   setIsDeleteConversationDialogOpen(true);
+}
+
+function handleOpenCategoryDialog() {
+  setIsConversationMenuOpen(false);
+  setIsCategoryDialogOpen(true);
 }
 
 function handleCloseDeleteConversationDialog() {
@@ -866,6 +889,14 @@ async function handleDeleteConversation() {
                       }
                     </h2>
 
+                    {selectedCustomerCategory && (
+                      <span className="customer-category-badge">
+                        {getCustomerCategoryLabel(
+                          selectedCustomerCategory,
+                        )}
+                      </span>
+                    )}
+
                     {selectedConversation.customer.website_url && (
                       <a
                         className="company-chat-panel__website company-chat-panel__website--desktop"
@@ -1009,6 +1040,16 @@ async function handleDeleteConversation() {
                       <button
                         type="button"
                         role="menuitem"
+                        onClick={
+                          handleOpenCategoryDialog
+                        }
+                      >
+                        Associa a categoria
+                      </button>
+
+                      <button
+                        type="button"
+                        role="menuitem"
                         className="conversation-actions__danger"
                         onClick={
                           handleOpenDeleteConversationDialog
@@ -1059,6 +1100,25 @@ async function handleDeleteConversation() {
           )}
         </section>
       </main>
+
+      {isCategoryDialogOpen &&
+        selectedConversation && (
+          <CustomerCategoryDialog
+            customerId={
+              selectedConversation.customer_id
+            }
+            customerName={
+              selectedConversation.customer
+                .display_name
+            }
+            currentCategory={
+              selectedCustomerCategory
+            }
+            onClose={() =>
+              setIsCategoryDialogOpen(false)
+            }
+          />
+        )}
 
         {isDeleteConversationDialogOpen &&
   selectedConversation && (
