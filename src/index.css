@@ -6199,3 +6199,27 @@ z-index: 100;
     max-width: none;
   }
 }
+
+.customer-detail__note-body--collapsed {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.customer-detail__note-toggle {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--five-pink-dark, #b9005f);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.customer-detail__note-toggle:hover {
+  text-decoration: underline;
+}

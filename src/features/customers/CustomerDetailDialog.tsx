@@ -1,4 +1,8 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import type { CompanyConversation } from "../conversations/types";
 import { CustomerAvatar } from "./CustomerAvatar";
@@ -91,6 +95,89 @@ function groupNotesByMonth(
   }
 
   return groups;
+}
+
+function CustomerNoteItem({
+  note,
+}: {
+  note: CustomerNote;
+}) {
+  const bodyRef =
+    useRef<HTMLParagraphElement | null>(null);
+
+  const [isExpanded, setIsExpanded] =
+    useState(false);
+
+  const [isTruncated, setIsTruncated] =
+    useState(false);
+
+  /*
+   * Il pulsante "Mostra tutto" serve solo se
+   * il testo supera le righe visibili, cosa che
+   * dipende dalla larghezza della finestra.
+   */
+  useEffect(() => {
+    const element = bodyRef.current;
+
+    if (!element || isExpanded) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      setIsTruncated(
+        element.scrollHeight >
+          element.clientHeight + 1,
+      );
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isExpanded]);
+
+  return (
+    <li>
+      <time dateTime={note.created_at}>
+        {formatNoteDateTime(note.created_at)}
+      </time>
+
+      {note.message_body && (
+        <blockquote className="customer-note-dialog__quote">
+          {note.message_body}
+        </blockquote>
+      )}
+
+      <p
+        ref={bodyRef}
+        className={
+          isExpanded
+            ? "customer-detail__note-body"
+            : "customer-detail__note-body customer-detail__note-body--collapsed"
+        }
+      >
+        {note.body}
+      </p>
+
+      {(isTruncated || isExpanded) && (
+        <button
+          type="button"
+          className="customer-detail__note-toggle"
+          onClick={() =>
+            setIsExpanded(
+              (currentValue) => !currentValue,
+            )
+          }
+          aria-expanded={isExpanded}
+        >
+          {isExpanded
+            ? "Mostra meno"
+            : "Mostra tutto"}
+        </button>
+      )}
+    </li>
+  );
 }
 
 export function CustomerDetailDialog({
@@ -305,21 +392,10 @@ export function CustomerDetailDialog({
 
               <ul className="customer-detail__notes">
                 {group.notes.map((note) => (
-                  <li key={note.id}>
-                    <time dateTime={note.created_at}>
-                      {formatNoteDateTime(
-                        note.created_at,
-                      )}
-                    </time>
-
-                    {note.message_body && (
-                      <blockquote className="customer-note-dialog__quote">
-                        {note.message_body}
-                      </blockquote>
-                    )}
-
-                    <p>{note.body}</p>
-                  </li>
+                  <CustomerNoteItem
+                    key={note.id}
+                    note={note}
+                  />
                 ))}
               </ul>
             </section>
