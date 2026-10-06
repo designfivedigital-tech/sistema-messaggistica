@@ -9,7 +9,6 @@ import CompanyDashboardPage from "../pages/CompanyDashboardPage";
 import CustomerChatPage from "../pages/CustomerChatPage";
 import LoginPage from "../pages/LoginPage";
 import NotFoundPage from "../pages/NotFoundPage";
-import RegisterPage from "../pages/RegisterPage";
 
 export default function AppRouter() {
   return (
@@ -17,7 +16,6 @@ export default function AppRouter() {
       <Route path="/" element={<Navigate to="/accesso" replace />} />
 
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/registrazione" element={<RegisterPage />} />
 
       <Route
         path="/accesso"

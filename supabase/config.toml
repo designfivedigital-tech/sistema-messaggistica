@@ -419,6 +419,12 @@ verify_jwt = false
 import_map = "./functions/notify-message/deno.json"
 entrypoint = "./functions/notify-message/index.ts"
 
+[functions.create-customer]
+enabled = true
+verify_jwt = false
+import_map = "./functions/create-customer/deno.json"
+entrypoint = "./functions/create-customer/index.ts"
+
 [functions.clockify]
 enabled = true
 verify_jwt = false

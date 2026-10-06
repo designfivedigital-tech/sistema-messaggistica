@@ -84,7 +84,9 @@ export default function ConversationList({
          * i messaggi sono stati letti.
          */
         const isWaiting =
-          conversation.status === "new";
+          conversation.status === "new" &&
+          conversation.last_message_created_at !==
+            null;
 
         const badgeLabel = hasUnread
           ? `${conversation.unread_count} messaggi non letti`

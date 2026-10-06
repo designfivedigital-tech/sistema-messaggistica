@@ -1,28 +1,7 @@
 import { queryClient } from "../../app/queryClient";
 import { supabase } from "../../lib/supabase";
-import type { AuthCredentials, RegisterCredentials } from "./types";
+import type { AuthCredentials } from "./types";
 import { unregisterPushNotifications } from "../notifications/pushService";
-export async function registerUser({
-  email,
-  password,
-  displayName,
-}: RegisterCredentials) {
-  const { data, error } = await supabase.auth.signUp({
-    email: email.trim().toLowerCase(),
-    password,
-    options: {
-      data: {
-        display_name: displayName.trim(),
-      },
-    },
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
 
 export async function loginUser({
   email,

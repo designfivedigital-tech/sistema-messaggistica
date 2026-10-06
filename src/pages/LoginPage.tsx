@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../features/auth/authService";
 
 export default function LoginPage() {
@@ -86,8 +86,8 @@ export default function LoginPage() {
         </form>
 
         <p className="auth-card__footer">
-          Non hai un account?{" "}
-          <Link to="/registrazione">Registrati</Link>
+          Non hai un account? Richiedilo
+          all'azienda.
         </p>
       </section>
     </main>

@@ -15,6 +15,7 @@ import {
   isNoteTimerRunning,
   type CustomerNote,
 } from "../features/customers/customerNote";
+import { RegisterCustomerDialog } from "../features/customers/RegisterCustomerDialog";
 import { ClockifySettingsDialog } from "../features/clockify/ClockifySettingsDialog";
 import {
   useClockifyTimerSync,
@@ -60,6 +61,11 @@ export default function CompanyCustomersPage() {
   const [
     isClockifySettingsOpen,
     setIsClockifySettingsOpen,
+  ] = useState(false);
+
+  const [
+    isRegisterDialogOpen,
+    setIsRegisterDialogOpen,
   ] = useState(false);
 
   const selectConversation =
@@ -244,6 +250,16 @@ export default function CompanyCustomersPage() {
           >
             Clockify
           </button>
+
+          <button
+            type="button"
+            className="customers-page__register"
+            onClick={() =>
+              setIsRegisterDialogOpen(true)
+            }
+          >
+            + Registra cliente
+          </button>
         </div>
       </header>
 
@@ -344,6 +360,14 @@ export default function CompanyCustomersPage() {
           </div>
         )}
       </main>
+
+      {isRegisterDialogOpen && (
+        <RegisterCustomerDialog
+          onClose={() =>
+            setIsRegisterDialogOpen(false)
+          }
+        />
+      )}
 
       {isClockifySettingsOpen && (
         <ClockifySettingsDialog

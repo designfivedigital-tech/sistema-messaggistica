@@ -6439,3 +6439,72 @@ z-index: 100;
 .chat-timer-banner--error {
   font-weight: 600;
 }
+
+/* =========================================================
+   REGISTRAZIONE CLIENTE
+   ========================================================= */
+
+.customers-page__register {
+  height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--five-pink, #e20074);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.customers-page__register:hover {
+  background: var(--five-pink-dark, #b9005f);
+}
+
+.register-customer__password {
+  display: flex;
+  gap: 8px;
+}
+
+.register-customer__password button {
+  flex-shrink: 0;
+  padding: 0 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.register-customer__credentials {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f7f7f8;
+}
+
+.register-customer__credentials dt {
+  color: #667085;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.register-customer__credentials dd {
+  margin: 2px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.customer-category-dialog__card {
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+}
