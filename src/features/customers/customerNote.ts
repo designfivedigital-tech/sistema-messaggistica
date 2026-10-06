@@ -11,8 +11,13 @@ export type CustomerNote = {
    */
   message_body: string | null;
 
+  /* Data di invio del messaggio annotato. */
+  message_created_at: string | null;
+
   body: string;
   created_by: string | null;
+
+  /* Data di creazione della nota. */
   created_at: string;
 };
 
@@ -21,5 +26,6 @@ export type CreateCustomerNoteInput = {
   conversationId: string;
   messageId: string;
   messageBody: string | null;
+  messageCreatedAt: string;
   body: string;
 };

@@ -60,6 +60,7 @@ export function CustomerNoteDialog({
         conversationId: message.conversation_id,
         messageId: message.id,
         messageBody: messagePreview,
+        messageCreatedAt: message.created_at,
         body,
       });
 

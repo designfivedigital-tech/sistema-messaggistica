@@ -21,6 +21,9 @@ type CustomerDetailDialogProps = {
   notesErrorMessage: string | null;
 
   onOpenChat: () => void;
+
+  /* Apre la chat sul messaggio annotato. */
+  onOpenMessage: (note: CustomerNote) => void;
   onClose: () => void;
 };
 
@@ -48,9 +51,9 @@ function formatDate(value: string) {
 
 function formatNoteDateTime(value: string) {
   return new Intl.DateTimeFormat("it-IT", {
-    weekday: "short",
     day: "2-digit",
     month: "long",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
@@ -99,8 +102,10 @@ function groupNotesByMonth(
 
 function CustomerNoteItem({
   note,
+  onOpenMessage,
 }: {
   note: CustomerNote;
+  onOpenMessage: (note: CustomerNote) => void;
 }) {
   const bodyRef =
     useRef<HTMLParagraphElement | null>(null);
@@ -140,13 +145,36 @@ function CustomerNoteItem({
   return (
     <li>
       <time dateTime={note.created_at}>
+        Nota del{" "}
         {formatNoteDateTime(note.created_at)}
       </time>
 
-      {note.message_body && (
-        <blockquote className="customer-note-dialog__quote">
-          {note.message_body}
-        </blockquote>
+      {note.message_body &&
+        (note.conversation_id && note.message_id ? (
+          <button
+            type="button"
+            className="customer-note-dialog__quote customer-note-dialog__quote--link"
+            onClick={() => onOpenMessage(note)}
+            title="Vai al messaggio nella chat"
+          >
+            {note.message_body}
+          </button>
+        ) : (
+          <blockquote className="customer-note-dialog__quote">
+            {note.message_body}
+          </blockquote>
+        ))}
+
+      {note.message_created_at && (
+        <time
+          className="customer-detail__message-date"
+          dateTime={note.message_created_at}
+        >
+          Messaggio del{" "}
+          {formatNoteDateTime(
+            note.message_created_at,
+          )}
+        </time>
       )}
 
       <p
@@ -186,6 +214,7 @@ export function CustomerDetailDialog({
   notes,
   notesErrorMessage,
   onOpenChat,
+  onOpenMessage,
   onClose,
 }: CustomerDetailDialogProps) {
   const [noteSearch, setNoteSearch] = useState("");
@@ -395,6 +424,7 @@ export function CustomerDetailDialog({
                   <CustomerNoteItem
                     key={note.id}
                     note={note}
+                    onOpenMessage={onOpenMessage}
                   />
                 ))}
               </ul>

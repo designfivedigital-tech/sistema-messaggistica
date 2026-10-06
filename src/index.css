@@ -6223,3 +6223,33 @@ z-index: 100;
 .customer-detail__note-toggle:hover {
   text-decoration: underline;
 }
+
+.customer-detail__notes .customer-detail__message-date {
+  margin: 6px 0 0;
+  font-weight: 500;
+}
+
+.customer-note-dialog__quote--link {
+  display: block;
+  width: 100%;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  font: inherit;
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.customer-note-dialog__quote--link:hover,
+.customer-note-dialog__quote--link:focus-visible {
+  outline: none;
+  background: rgba(226, 0, 116, 0.08);
+  color: #172033;
+}
+
+.message-row--focused .message-bubble {
+  box-shadow:
+    0 0 0 3px rgba(226, 0, 116, 0.45),
+    0 12px 30px rgba(226, 0, 116, 0.16);
+}

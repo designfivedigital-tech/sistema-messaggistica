@@ -58,8 +58,17 @@ export default function CompanyDashboardPage() {
     ).matches;
   });
 
+  /*
+   * Se si arriva da una nota del cliente, su
+   * mobile la chat viene aperta direttamente.
+   */
   const [isMobileChatOpen, setIsMobileChatOpen] =
-    useState(false);
+    useState(() =>
+      Boolean(
+        useConversationStore.getState()
+          .focusedMessageId,
+      ),
+    );
 
     const [isConversationMenuOpen, setIsConversationMenuOpen] =
   useState(false);

@@ -17,6 +17,7 @@ export async function getCustomerNotes(): Promise<
         conversation_id,
         message_id,
         message_body,
+        message_created_at,
         body,
         created_by,
         created_at
@@ -43,6 +44,7 @@ export async function createCustomerNote({
   conversationId,
   messageId,
   messageBody,
+  messageCreatedAt,
   body,
 }: CreateCustomerNoteInput): Promise<CustomerNote> {
   const normalizedBody = body.trim();
@@ -62,6 +64,7 @@ export async function createCustomerNote({
       conversation_id: conversationId,
       message_id: messageId,
       message_body: messageBody,
+      message_created_at: messageCreatedAt,
       body: normalizedBody,
     })
     .select(
@@ -71,6 +74,7 @@ export async function createCustomerNote({
         conversation_id,
         message_id,
         message_body,
+        message_created_at,
         body,
         created_by,
         created_at

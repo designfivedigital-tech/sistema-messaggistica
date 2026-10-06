@@ -54,6 +54,10 @@ export default function CompanyCustomersPage() {
       (state) => state.selectConversation,
     );
 
+  const focusMessage = useConversationStore(
+    (state) => state.focusMessage,
+  );
+
   const {
     data: conversations = [],
     isLoading,
@@ -332,6 +336,21 @@ export default function CompanyCustomersPage() {
               selectedCustomer.conversation.id,
             )
           }
+          onOpenMessage={(note) => {
+            if (
+              !note.conversation_id ||
+              !note.message_id
+            ) {
+              return;
+            }
+
+            focusMessage(
+              note.conversation_id,
+              note.message_id,
+            );
+
+            navigate("/azienda");
+          }}
           onClose={() => setSelectedCustomerId(null)}
         />
       )}

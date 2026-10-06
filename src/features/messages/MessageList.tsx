@@ -15,6 +15,7 @@ import { useDeleteMessage } from "./useDeleteMessage";
 import { useRemoveMessageReaction } from "./useRemoveMessageReaction";
 import { useReplyStore } from "./replyStore";
 import { useSetMessageReaction } from "./useSetMessageReaction";
+import { useConversationStore } from "../../stores/conversationStore";
 
 import type {
   ChatMessage,
@@ -39,6 +40,13 @@ type MessageContextMenu = {
   x: number;
   y: number;
 };
+
+/*
+ * Il ritardo lascia terminare lo scorrimento
+ * automatico verso l'ultimo messaggio.
+ */
+const FOCUSED_MESSAGE_SCROLL_DELAY_MS = 350;
+const FOCUSED_MESSAGE_HIGHLIGHT_MS = 3000;
 
 const LONG_PRESS_DELAY_MS = 500;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
@@ -266,6 +274,14 @@ export default function MessageList({
     (state) => state.setReplyMessage,
   );
 
+  const focusedMessageId = useConversationStore(
+    (state) => state.focusedMessageId,
+  );
+
+  const clearFocusedMessage = useConversationStore(
+    (state) => state.clearFocusedMessage,
+  );
+
   const visibleMessages = useMemo(
     () => messages,
     [messages],
@@ -345,6 +361,54 @@ export default function MessageList({
       block: "end",
     });
   }, [visibleMessages.length]);
+
+  /*
+   * Raggiunge ed evidenzia per qualche secondo
+   * il messaggio richiesto da un'altra pagina
+   * (ad esempio da una nota del cliente).
+   */
+  useEffect(() => {
+    if (!focusedMessageId || isLoading) {
+      return;
+    }
+
+    let clearTimer: number | null = null;
+
+    const scrollTimer = window.setTimeout(() => {
+      const messageElement =
+        document.getElementById(
+          `message-${focusedMessageId}`,
+        );
+
+      if (!messageElement) {
+        clearFocusedMessage();
+        return;
+      }
+
+      messageElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      clearTimer = window.setTimeout(
+        clearFocusedMessage,
+        FOCUSED_MESSAGE_HIGHLIGHT_MS,
+      );
+    }, FOCUSED_MESSAGE_SCROLL_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+
+      if (clearTimer !== null) {
+        window.clearTimeout(clearTimer);
+      }
+    };
+  }, [
+    clearFocusedMessage,
+    focusedMessageId,
+    isLoading,
+    visibleMessages.length,
+  ]);
 
   useEffect(() => {
     if (!isSearchOpen) {
@@ -1063,6 +1127,9 @@ export default function MessageList({
                   activeSearchMessageId ===
                   message.id
                     ? "message-row--search-active"
+                    : "",
+                  focusedMessageId === message.id
+                    ? "message-row--focused"
                     : "",
                   isOwn
                     ? "message-row--own"
