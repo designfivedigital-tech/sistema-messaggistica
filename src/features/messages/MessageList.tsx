@@ -7,6 +7,7 @@ import {
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   ReactNode,
+  TouchEvent as ReactTouchEvent,
 } from "react";
 
 import MessageAttachment from "./MessageAttachment";
@@ -24,7 +25,25 @@ type MessageListProps = {
   messages: ChatMessage[];
   currentUserId: string;
   isLoading: boolean;
+
+  /*
+   * Se presente, tenendo premuto un messaggio
+   * (mobile) o con il click destro (desktop)
+   * compare la voce "Aggiungi nota".
+   */
+  onAddNote?: (message: ChatMessage) => void;
 };
+
+type MessageContextMenu = {
+  messageId: string;
+  x: number;
+  y: number;
+};
+
+const LONG_PRESS_DELAY_MS = 500;
+const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
+const CONTEXT_MENU_WIDTH_PX = 190;
+const CONTEXT_MENU_HEIGHT_PX = 110;
 
 type ReactionGroup = {
   emoji: string;
@@ -190,7 +209,19 @@ export default function MessageList({
   messages,
   currentUserId,
   isLoading,
+  onAddNote,
 }: MessageListProps) {
+  const [contextMenu, setContextMenu] =
+    useState<MessageContextMenu | null>(null);
+
+  const longPressTimerRef =
+    useRef<number | null>(null);
+
+  const longPressStartRef =
+    useRef<{ x: number; y: number } | null>(null);
+
+  const longPressFiredRef = useRef(false);
+
   const bottomRef =
     useRef<HTMLDivElement | null>(null);
 
@@ -360,6 +391,7 @@ export default function MessageList({
     function handleDocumentClick() {
       setOpenMenuId(null);
       setOpenReactionPickerId(null);
+      setContextMenu(null);
     }
 
     function handleDocumentKeyDown(
@@ -371,6 +403,7 @@ export default function MessageList({
 
       setOpenMenuId(null);
       setOpenReactionPickerId(null);
+      setContextMenu(null);
     }
 
     document.addEventListener(
@@ -395,6 +428,134 @@ export default function MessageList({
       );
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current !== null) {
+        window.clearTimeout(
+          longPressTimerRef.current,
+        );
+      }
+    };
+  }, []);
+
+  function openContextMenu(
+    messageId: string,
+    x: number,
+    y: number,
+  ) {
+    setOpenMenuId(null);
+    setOpenReactionPickerId(null);
+
+    setContextMenu({
+      messageId,
+
+      x: Math.max(
+        8,
+        Math.min(
+          x,
+          window.innerWidth -
+            CONTEXT_MENU_WIDTH_PX,
+        ),
+      ),
+
+      y: Math.max(
+        8,
+        Math.min(
+          y,
+          window.innerHeight -
+            CONTEXT_MENU_HEIGHT_PX,
+        ),
+      ),
+    });
+  }
+
+  function cancelLongPress() {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(
+        longPressTimerRef.current,
+      );
+
+      longPressTimerRef.current = null;
+    }
+
+    longPressStartRef.current = null;
+  }
+
+  function handleMessageTouchStart(
+    event: ReactTouchEvent<HTMLDivElement>,
+    messageId: string,
+  ) {
+    cancelLongPress();
+    longPressFiredRef.current = false;
+
+    if (event.touches.length !== 1) {
+      return;
+    }
+
+    const { clientX, clientY } =
+      event.touches[0];
+
+    longPressStartRef.current = {
+      x: clientX,
+      y: clientY,
+    };
+
+    longPressTimerRef.current =
+      window.setTimeout(() => {
+        longPressTimerRef.current = null;
+        longPressFiredRef.current = true;
+
+        openContextMenu(
+          messageId,
+          clientX,
+          clientY,
+        );
+      }, LONG_PRESS_DELAY_MS);
+  }
+
+  function handleMessageTouchMove(
+    event: ReactTouchEvent<HTMLDivElement>,
+  ) {
+    const start = longPressStartRef.current;
+    const touch = event.touches[0];
+
+    if (!start || !touch) {
+      return;
+    }
+
+    /*
+     * Lo scorrimento della chat non deve
+     * essere scambiato per una pressione lunga.
+     */
+    if (
+      Math.abs(touch.clientX - start.x) >
+        LONG_PRESS_MOVE_TOLERANCE_PX ||
+      Math.abs(touch.clientY - start.y) >
+        LONG_PRESS_MOVE_TOLERANCE_PX
+    ) {
+      cancelLongPress();
+    }
+  }
+
+  function handleMessageTouchEnd(
+    event: ReactTouchEvent<HTMLDivElement>,
+  ) {
+    cancelLongPress();
+
+    /*
+     * Evita che il rilascio del dito generi
+     * un click che chiuderebbe subito il menu.
+     */
+    if (
+      longPressFiredRef.current &&
+      event.cancelable
+    ) {
+      event.preventDefault();
+    }
+
+    longPressFiredRef.current = false;
+  }
 
   function openSearch() {
     setIsSearchOpen(true);
@@ -604,8 +765,19 @@ export default function MessageList({
     );
   }
 
+  const contextMenuMessage = contextMenu
+    ? messagesById.get(contextMenu.messageId) ??
+      null
+    : null;
+
   return (
-    <div className="message-list">
+    <div
+      className={
+        onAddNote
+          ? "message-list message-list--notes"
+          : "message-list"
+      }
+    >
       <div
         className={[
           "message-search",
@@ -1081,7 +1253,32 @@ export default function MessageList({
                   </button>
                 )}
 
-                <div className="message-content">
+                <div
+                  className="message-content"
+                  {...(onAddNote && !isDeleted
+                    ? {
+                        onContextMenu: (event) => {
+                          event.preventDefault();
+
+                          openContextMenu(
+                            message.id,
+                            event.clientX,
+                            event.clientY,
+                          );
+                        },
+                        onTouchStart: (event) =>
+                          handleMessageTouchStart(
+                            event,
+                            message.id,
+                          ),
+                        onTouchMove:
+                          handleMessageTouchMove,
+                        onTouchEnd:
+                          handleMessageTouchEnd,
+                        onTouchCancel: cancelLongPress,
+                      }
+                    : {})}
+                >
                   <div
                     className={[
                       "message-bubble",
@@ -1249,6 +1446,56 @@ export default function MessageList({
         ref={bottomRef}
         className="message-list__bottom"
       />
+
+      {contextMenu &&
+        contextMenuMessage &&
+        onAddNote && (
+          <div
+            className="message-context-menu"
+            role="menu"
+            style={{
+              top: contextMenu.y,
+              left: contextMenu.x,
+            }}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+            onContextMenu={(event) =>
+              event.preventDefault()
+            }
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenu(null);
+
+                setReplyMessage({
+                  id: contextMenuMessage.id,
+                  conversationId:
+                    contextMenuMessage.conversation_id,
+                  senderId:
+                    contextMenuMessage.sender_id,
+                  body:
+                    contextMenuMessage.body ?? "",
+                });
+              }}
+            >
+              Rispondi
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setContextMenu(null);
+                onAddNote(contextMenuMessage);
+              }}
+            >
+              Aggiungi nota
+            </button>
+          </div>
+        )}
     </div>
   );
 }

@@ -23,6 +23,8 @@ import { PushNotificationButton } from "../features/notifications/PushNotificati
 import { useConversationStore } from "../stores/conversationStore";
 import { useDeleteConversation } from "../features/conversations/useDeleteConversation";
 import { CustomerCategoryDialog } from "../features/customers/CustomerCategoryDialog";
+import { CustomerNoteDialog } from "../features/customers/CustomerNoteDialog";
+import type { ChatMessage } from "../features/messages/types";
 import {
   CUSTOMER_CATEGORIES,
   getCustomerCategoryLabel,
@@ -89,6 +91,9 @@ const [
   isCategoryDialogOpen,
   setIsCategoryDialogOpen,
 ] = useState(false);
+
+const [noteMessage, setNoteMessage] =
+  useState<ChatMessage | null>(null);
 
 const conversationMenuRef =
   useRef<HTMLDivElement | null>(null);
@@ -1137,6 +1142,7 @@ async function handleDeleteConversation() {
                   isLoading={
                     isMessagesLoading
                   }
+                  onAddNote={setNoteMessage}
                 />
 
                 <MessageComposer
@@ -1182,6 +1188,23 @@ async function handleDeleteConversation() {
             onClose={() =>
               setIsCategoryDialogOpen(false)
             }
+          />
+        )}
+
+      {noteMessage &&
+        selectedConversation &&
+        noteMessage.conversation_id ===
+          selectedConversation.id && (
+          <CustomerNoteDialog
+            customerId={
+              selectedConversation.customer_id
+            }
+            customerName={
+              selectedConversation.customer
+                .display_name
+            }
+            message={noteMessage}
+            onClose={() => setNoteMessage(null)}
           />
         )}
 

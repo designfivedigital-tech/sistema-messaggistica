@@ -5557,7 +5557,7 @@ z-index: 100;
 }
 
 .conversation-category-filter {
-  margin: 0 16px 2px;
+  margin: 8px 16px 2px;
 }
 
 .conversation-category-filter select {
@@ -5584,4 +5584,90 @@ z-index: 100;
   .customer-category-badge {
     display: none;
   }
+}
+
+/* =========================================================
+   NOTE CLIENTE
+   ========================================================= */
+
+.message-context-menu {
+  position: fixed;
+  z-index: 1500;
+  display: flex;
+  width: 180px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e5e5e7;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+}
+
+.message-context-menu button {
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #ededf0;
+  background: #fff;
+  color: #171717;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.message-context-menu button:last-child {
+  border-bottom: 0;
+}
+
+.message-context-menu button:hover {
+  background: #f7f7f8;
+}
+
+/*
+ * Su touch la pressione lunga apre il menu
+ * invece della selezione del testo.
+ */
+@media (hover: none) {
+  .message-list--notes .message-content {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+.customer-category-dialog__card textarea {
+  display: block;
+  width: 100%;
+  min-height: 110px;
+  padding: 12px 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 11px;
+  outline: none;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.customer-category-dialog__card textarea:focus {
+  border-color: var(--five-pink, #e20074);
+  box-shadow: 0 0 0 4px rgba(226, 0, 116, 0.12);
+}
+
+.customer-note-dialog__quote {
+  max-height: 96px;
+  margin: 0;
+  padding: 8px 12px;
+  overflow: auto;
+  border-left: 3px solid var(--five-pink, #e20074);
+  border-radius: 6px;
+  background: #f7f7f8;
+  color: #475467;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
