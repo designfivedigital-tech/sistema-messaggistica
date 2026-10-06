@@ -5555,3 +5555,33 @@ z-index: 100;
     width: 100%;
   }
 }
+
+.conversation-category-filter {
+  margin: 0 16px 2px;
+}
+
+.conversation-category-filter select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #dedee3;
+  border-radius: 12px;
+  background: #f7f7f8;
+  color: #111;
+  font: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.conversation-category-filter select:focus {
+  border-color: #e20074;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(226, 0, 116, 0.12);
+}
+
+@media (max-width: 760px) {
+  .customer-category-badge {
+    display: none;
+  }
+}

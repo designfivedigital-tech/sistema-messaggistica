@@ -23,7 +23,11 @@ import { PushNotificationButton } from "../features/notifications/PushNotificati
 import { useConversationStore } from "../stores/conversationStore";
 import { useDeleteConversation } from "../features/conversations/useDeleteConversation";
 import { CustomerCategoryDialog } from "../features/customers/CustomerCategoryDialog";
-import { getCustomerCategoryLabel } from "../features/customers/customerCategory";
+import {
+  CUSTOMER_CATEGORIES,
+  getCustomerCategoryLabel,
+  type CustomerCategory,
+} from "../features/customers/customerCategory";
 import { useCustomerCategories } from "../features/customers/useCustomerCategories";
 
 
@@ -32,6 +36,11 @@ const MOBILE_MEDIA_QUERY = "(max-width: 760px)";
 type ConversationFilter =
   | "all"
   | ConversationStatus;
+
+type CategoryFilter =
+  | "all"
+  | "none"
+  | CustomerCategory;
 
 export default function CompanyDashboardPage() {
   const navigate = useNavigate();
@@ -57,6 +66,9 @@ export default function CompanyDashboardPage() {
 
   const [conversationSearch, setConversationSearch] =
   useState("");
+
+  const [categoryFilter, setCategoryFilter] =
+    useState<CategoryFilter>("all");
 
   const [
   isDeleteConversationDialogOpen,
@@ -112,48 +124,82 @@ const conversationMenuRef =
   ).length,
 };
 
-const normalizedConversationSearch =
-  conversationSearch.trim().toLocaleLowerCase("it-IT");
+const { data: customerCategories = [] } =
+  useCustomerCategories();
 
-const conversationsFilteredByStatus =
-  conversationFilter === "all"
-    ? conversations
-    : conversations.filter(
-        (conversation) =>
-          conversation.status ===
-          conversationFilter,
+function getCustomerCategory(customerId: string) {
+  return (
+    customerCategories.find(
+      (assignment) =>
+        assignment.customer_id === customerId,
+    )?.category ?? null
+  );
+}
+
+/*
+ * Applica insieme ricerca testuale, stato
+ * della conversazione e categoria del cliente.
+ */
+function getVisibleConversations(
+  statusFilter: ConversationFilter,
+  search: string,
+  categoryFilter: CategoryFilter,
+) {
+  const normalizedSearch =
+    search.trim().toLocaleLowerCase("it-IT");
+
+  return conversations.filter((conversation) => {
+    if (
+      statusFilter !== "all" &&
+      conversation.status !== statusFilter
+    ) {
+      return false;
+    }
+
+    if (categoryFilter !== "all") {
+      const category = getCustomerCategory(
+        conversation.customer_id,
       );
+
+      if (
+        categoryFilter === "none"
+          ? category !== null
+          : category !== categoryFilter
+      ) {
+        return false;
+      }
+    }
+
+    if (normalizedSearch.length === 0) {
+      return true;
+    }
+
+    const displayName =
+      conversation.customer.display_name
+        ?.toLocaleLowerCase("it-IT") ?? "";
+
+    const email =
+      conversation.customer.email
+        ?.toLocaleLowerCase("it-IT") ?? "";
+
+    const lastMessage =
+      conversation.last_message_body
+        ?.toLocaleLowerCase("it-IT") ?? "";
+
+    return (
+      displayName.includes(normalizedSearch) ||
+      email.includes(normalizedSearch) ||
+      lastMessage.includes(normalizedSearch)
+    );
+  });
+}
 
 const filteredConversations =
-  normalizedConversationSearch.length === 0
-    ? conversationsFilteredByStatus
-    : conversationsFilteredByStatus.filter(
-        (conversation) => {
-          const displayName =
-            conversation.customer.display_name
-              ?.toLocaleLowerCase("it-IT") ?? "";
-
-          const email =
-            conversation.customer.email
-              ?.toLocaleLowerCase("it-IT") ?? "";
-
-          const lastMessage =
-            conversation.last_message_body
-              ?.toLocaleLowerCase("it-IT") ?? "";
-
-          return (
-            displayName.includes(
-              normalizedConversationSearch,
-            ) ||
-            email.includes(
-              normalizedConversationSearch,
-            ) ||
-            lastMessage.includes(
-              normalizedConversationSearch,
-            )
-          );
-        },
-      );
+  getVisibleConversations(
+    conversationFilter,
+    conversationSearch,
+    categoryFilter,
+  );
 
   const updateConversationStatusMutation =
   useUpdateConversationStatus();
@@ -183,15 +229,12 @@ const filteredConversations =
         selectedConversationId,
     );
 
-  const { data: customerCategories = [] } =
-    useCustomerCategories();
-
   const selectedCustomerCategory =
-    customerCategories.find(
-      (assignment) =>
-        assignment.customer_id ===
-        selectedConversation?.customer_id,
-    )?.category ?? null;
+    selectedConversation
+      ? getCustomerCategory(
+          selectedConversation.customer_id,
+        )
+      : null;
 
   const {
     data: messages = [],
@@ -371,73 +414,65 @@ const filteredConversations =
 }, [isConversationMenuOpen]);
 
 
-  function handleConversationFilterChange(
-  filter: ConversationFilter,
-) {
-  setConversationFilter(filter);
-  setIsConversationMenuOpen(false);
+  /*
+   * Dopo un cambio di filtro mantiene la
+   * selezione solo se è ancora visibile.
+   */
+  function syncSelectionWithFilters(
+    statusFilter: ConversationFilter,
+    nextCategoryFilter: CategoryFilter,
+  ) {
+    setIsConversationMenuOpen(false);
 
-  const conversationsMatchingStatus =
-  filter === "all"
-    ? conversations
-    : conversations.filter(
+    if (isMobile) {
+      clearSelectedConversation();
+      setIsMobileChatOpen(false);
+      return;
+    }
+
+    const nextConversations =
+      getVisibleConversations(
+        statusFilter,
+        conversationSearch,
+        nextCategoryFilter,
+      );
+
+    const selectedIsVisible =
+      nextConversations.some(
         (conversation) =>
-          conversation.status === filter,
+          conversation.id ===
+          selectedConversationId,
       );
 
-const normalizedSearch =
-  conversationSearch.trim().toLocaleLowerCase("it-IT");
+    if (selectedIsVisible) {
+      return;
+    }
 
-const nextConversations =
-  normalizedSearch.length === 0
-    ? conversationsMatchingStatus
-    : conversationsMatchingStatus.filter(
-        (conversation) => {
-          const displayName =
-            conversation.customer.display_name
-              ?.toLocaleLowerCase("it-IT") ?? "";
-
-          const email =
-            conversation.customer.email
-              ?.toLocaleLowerCase("it-IT") ?? "";
-
-          const lastMessage =
-            conversation.last_message_body
-              ?.toLocaleLowerCase("it-IT") ?? "";
-
-          return (
-            displayName.includes(normalizedSearch) ||
-            email.includes(normalizedSearch) ||
-            lastMessage.includes(normalizedSearch)
-          );
-        },
+    if (nextConversations.length > 0) {
+      selectConversation(
+        nextConversations[0].id,
       );
-
-  if (isMobile) {
-    clearSelectedConversation();
-    setIsMobileChatOpen(false);
-    return;
+    } else {
+      clearSelectedConversation();
+    }
   }
 
-  const selectedIsVisible =
-    nextConversations.some(
-      (conversation) =>
-        conversation.id ===
-        selectedConversationId,
+  function handleConversationFilterChange(
+    filter: ConversationFilter,
+  ) {
+    setConversationFilter(filter);
+    syncSelectionWithFilters(filter, categoryFilter);
+  }
+
+  function handleCategoryFilterChange(
+    filter: CategoryFilter,
+  ) {
+    setCategoryFilter(filter);
+    syncSelectionWithFilters(
+      conversationFilter,
+      filter,
     );
-
-  if (selectedIsVisible) {
-    return;
   }
-
-  if (nextConversations.length > 0) {
-    selectConversation(
-      nextConversations[0].id,
-    );
-  } else {
-    clearSelectedConversation();
-  }
-}
 
   function handleSelectConversation(
   conversationId: string,
@@ -713,6 +748,36 @@ async function handleDeleteConversation() {
                 ×
               </button>
             )}
+          </div>
+
+          <div className="conversation-category-filter">
+            <select
+              value={categoryFilter}
+              onChange={(event) =>
+                handleCategoryFilterChange(
+                  event.target
+                    .value as CategoryFilter,
+                )
+              }
+              aria-label="Filtra per categoria cliente"
+            >
+              <option value="all">
+                Tutte le categorie
+              </option>
+
+              {CUSTOMER_CATEGORIES.map((category) => (
+                <option
+                  key={category.value}
+                  value={category.value}
+                >
+                  {category.label}
+                </option>
+              ))}
+
+              <option value="none">
+                Senza categoria
+              </option>
+            </select>
           </div>
 
           <div

@@ -4,12 +4,13 @@
  * una categoria basta modificare questo elenco.
  */
 export const CUSTOMER_CATEGORIES = [
-  { value: "lead", label: "Potenziale cliente" },
-  { value: "new", label: "Nuovo cliente" },
-  { value: "active", label: "Cliente attivo" },
-  { value: "vip", label: "Cliente VIP" },
-  { value: "partner", label: "Partner" },
-  { value: "former", label: "Ex cliente" },
+  { value: "property_manager", label: "Property Manager" },
+  { value: "extralberghiero", label: "Extralberghiero" },
+  { value: "agriturismi", label: "Agriturismi" },
+  { value: "industria", label: "Industria" },
+  { value: "professioni", label: "Professioni" },
+  { value: "motori", label: "Motori" },
+  { value: "altro", label: "Altro" },
 ] as const;
 
 export type CustomerCategory =
