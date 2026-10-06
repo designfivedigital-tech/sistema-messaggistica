@@ -152,16 +152,17 @@ export default function ProfilePage() {
     event.preventDefault();
 
     /*
-     * Il nome dei clienti è gestito dall'azienda
-     * e non viene inviato con le modifiche.
+     * Nome e sito web dei clienti sono gestiti
+     * dall'azienda e non vengono inviati con le
+     * modifiche: il cliente cambia solo l'avatar.
      */
-    const canEditName =
+    const canEditDetails =
       profile?.role !== "customer";
 
     const normalizedDisplayName =
       displayName.trim();
 
-    if (canEditName && !normalizedDisplayName) {
+    if (canEditDetails && !normalizedDisplayName) {
       setFormError(
         "Inserisci un nome visualizzato.",
       );
@@ -179,8 +180,9 @@ export default function ProfilePage() {
       setFormError(null);
       setSuccessMessage(null);
 
-      const normalizedWebsiteUrl =
-        normalizeWebsiteUrl(websiteUrl);
+      const normalizedWebsiteUrl = canEditDetails
+        ? normalizeWebsiteUrl(websiteUrl)
+        : undefined;
 
       let uploadedAvatarUrl:
         | string
@@ -194,7 +196,7 @@ export default function ProfilePage() {
       }
 
       await updateProfileMutation.mutateAsync({
-        displayName: canEditName
+        displayName: canEditDetails
           ? normalizedDisplayName
           : undefined,
         websiteUrl: normalizedWebsiteUrl,
@@ -207,9 +209,11 @@ export default function ProfilePage() {
         setAvatarPreview(uploadedAvatarUrl);
       }
 
-      setWebsiteUrl(
-        normalizedWebsiteUrl ?? "",
-      );
+      if (normalizedWebsiteUrl !== undefined) {
+        setWebsiteUrl(
+          normalizedWebsiteUrl ?? "",
+        );
+      }
 
       setSuccessMessage(
         "Profilo aggiornato correttamente.",
@@ -290,7 +294,7 @@ export default function ProfilePage() {
 
             <p>
               {isCustomer
-                ? "Personalizza l’avatar e il riferimento al tuo sito web."
+                ? "Scegli la tua immagine profilo."
                 : "Personalizza il nome, l’avatar e il riferimento al tuo sito web."}
             </p>
           </div>
@@ -359,11 +363,12 @@ export default function ProfilePage() {
 
               <small>
                 {isCustomer
-                  ? "Il nome è gestito dall’azienda: per modificarlo contattala in chat."
+                  ? "Il nome è gestito dall’azienda."
                   : "Questo nome verrà mostrato nella chat."}
               </small>
             </label>
 
+            {!isCustomer && (
             <label>
               <span>Sito web</span>
 
@@ -385,18 +390,21 @@ export default function ProfilePage() {
                 conversazione.
               </small>
             </label>
+            )}
           </div>
 
-          <div className="profile-form__protected">
-            <strong>
-              Email e password
-            </strong>
+          {!isCustomer && (
+            <div className="profile-form__protected">
+              <strong>
+                Email e password
+              </strong>
 
-            <p>
-              Non vengono modificate da questa
-              pagina.
-            </p>
-          </div>
+              <p>
+                Non vengono modificate da questa
+                pagina.
+              </p>
+            </div>
+          )}
 
           {formError && (
             <p

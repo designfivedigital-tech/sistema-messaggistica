@@ -6525,3 +6525,52 @@ z-index: 100;
   border-color: #98a2b3;
   background: #f2f4f7;
 }
+
+/* =========================================================
+   PIEDE DELLA COLONNA CHAT (DESKTOP)
+   ========================================================= */
+
+.company-sidebar__footer {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid #e4e8ef;
+  background: #ffffff;
+}
+
+.company-sidebar__footer .push-notification-card {
+  max-width: none;
+  justify-content: stretch;
+}
+
+.company-sidebar__footer .push-notification-card__actions {
+  width: 100%;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.company-sidebar__footer .push-notification-card__button {
+  min-width: 0;
+  flex: 1 1 0;
+  padding: 9px 10px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+}
+
+.company-sidebar__footer .push-notification-card__message,
+.company-sidebar__footer .push-notification-card--warning p {
+  text-align: left;
+}
+
+.company-sidebar__footer .push-notification-card--warning {
+  max-width: none;
+}
+
+.company-sidebar__footer .company-header__logout {
+  width: 100%;
+}

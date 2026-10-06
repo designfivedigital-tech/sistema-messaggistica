@@ -61,13 +61,17 @@ export async function updateCurrentProfile({
 
   const updates: {
     display_name?: string;
-    website_url: string | null;
+    website_url?: string | null;
     avatar_url?: string | null;
     updated_at: string;
   } = {
-    website_url: websiteUrl?.trim() || null,
     updated_at: new Date().toISOString(),
   };
+
+  if (websiteUrl !== undefined) {
+    updates.website_url =
+      websiteUrl?.trim() || null;
+  }
 
   if (displayName !== undefined) {
     const normalizedDisplayName =

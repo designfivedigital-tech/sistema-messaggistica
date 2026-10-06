@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import { sendTestPushNotification } from "./testPushNotification";
 import {
   useEnablePushNotifications,
   usePushNotificationStatus,
@@ -9,9 +8,6 @@ import {
 export function PushNotificationButton() {
   const [message, setMessage] =
     useState<string | null>(null);
-
-  const [isTesting, setIsTesting] =
-    useState(false);
 
   const statusQuery =
     usePushNotificationStatus();
@@ -77,40 +73,6 @@ export function PushNotificationButton() {
     }
   }
 
-  async function handleTestPush() {
-    setMessage(null);
-    setIsTesting(true);
-
-    try {
-      const result =
-        await sendTestPushNotification();
-
-      console.log(
-        "Test push completato:",
-        result,
-      );
-
-      setMessage(
-        `Notifica inviata correttamente. Dispositivi raggiunti: ${
-          result.sent ?? 0
-        }.`,
-      );
-    } catch (error) {
-      console.error(
-        "Test push fallito:",
-        error,
-      );
-
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Impossibile inviare la notifica di prova.",
-      );
-    } finally {
-      setIsTesting(false);
-    }
-  }
-
   if (statusQuery.isLoading) {
     return null;
   }
@@ -145,9 +107,7 @@ export function PushNotificationButton() {
     );
   }
 
-  const isBusy =
-    enablePushMutation.isPending ||
-    isTesting;
+  const isBusy = enablePushMutation.isPending;
 
   return (
     <div className="push-notification-card">
@@ -185,19 +145,6 @@ export function PushNotificationButton() {
               ? "Notifiche attive ✓"
               : "Attiva notifiche"}
         </button>
-
-        {isActive ? (
-          <button
-            type="button"
-            className="push-notification-card__button push-notification-card__button--test"
-            disabled={isBusy}
-            onClick={handleTestPush}
-          >
-            {isTesting
-              ? "Invio..."
-              : "Invia notifica di prova"}
-          </button>
-        ) : null}
       </div>
 
       {message ? (

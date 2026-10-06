@@ -16,6 +16,8 @@ export type UpdateProfileInput = {
    * è gestito dall'azienda.
    */
   displayName?: string;
-  websiteUrl: string | null;
+
+  /* Da omettere per lasciarlo invariato. */
+  websiteUrl?: string | null;
   avatarUrl?: string | null;
 };

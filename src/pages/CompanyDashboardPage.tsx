@@ -956,6 +956,25 @@ async function handleDeleteConversation() {
               }
             />
           )}
+
+          {/*
+           * Su desktop l'intestazione con questi
+           * pulsanti è nascosta quando c'è una
+           * chat aperta, cioè quasi sempre.
+           */}
+          {!isMobile && (
+            <div className="company-sidebar__footer">
+              <PushNotificationButton />
+
+              <button
+                type="button"
+                className="company-header__logout"
+                onClick={handleLogout}
+              >
+                Esci
+              </button>
+            </div>
+          )}
         </aside>
 
         <section className="company-chat-panel">
