@@ -182,6 +182,23 @@ export async function registerPushNotifications(): Promise<PushRegistrationResul
     };
   }
 
+  const { subscription, created } =
+    await getOrCreateSubscription();
+
+  await savePushSubscription(subscription);
+
+  return {
+    status: created
+      ? "subscribed"
+      : "already-subscribed",
+    subscription,
+  };
+}
+
+async function getOrCreateSubscription(): Promise<{
+  subscription: PushSubscription;
+  created: boolean;
+}> {
   const registration =
     await getServiceWorkerRegistration();
 
@@ -189,14 +206,9 @@ export async function registerPushNotifications(): Promise<PushRegistrationResul
     await registration.pushManager.getSubscription();
 
   if (existingSubscription) {
-    await savePushSubscription(
-      existingSubscription,
-    );
-
     return {
-      status: "already-subscribed",
-      subscription:
-        existingSubscription,
+      subscription: existingSubscription,
+      created: false,
     };
   }
 
@@ -211,36 +223,39 @@ export async function registerPushNotifications(): Promise<PushRegistrationResul
       applicationServerKey,
     });
 
-  await savePushSubscription(subscription);
-
   return {
-    status: "subscribed",
     subscription,
+    created: true,
   };
 }
 
-export async function refreshPushSubscription(): Promise<void> {
+/*
+ * Se il permesso è già concesso, garantisce che
+ * il dispositivo abbia una sottoscrizione valida
+ * salvata nel database, ricreandola se è andata
+ * persa (logout, scadenza, pulizia lato server).
+ *
+ * Non richiede mai il permesso all'utente.
+ */
+export async function ensurePushSubscription(): Promise<boolean> {
   if (!isPushSupported()) {
-    return;
+    return false;
   }
 
   if (
     Notification.permission !== "granted"
   ) {
-    return;
+    return false;
   }
 
-  const registration =
-    await getServiceWorkerRegistration();
+  assertPushConfiguration();
 
-  const subscription =
-    await registration.pushManager.getSubscription();
-
-  if (!subscription) {
-    return;
-  }
+  const { subscription } =
+    await getOrCreateSubscription();
 
   await savePushSubscription(subscription);
+
+  return true;
 }
 
 export async function unregisterPushNotifications(): Promise<void> {

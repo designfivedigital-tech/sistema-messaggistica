@@ -25,6 +25,10 @@ export function PushNotificationButton() {
   const permission =
     statusQuery.data?.permission ?? "default";
 
+  const isActive =
+    permission === "granted" &&
+    (statusQuery.data?.subscribed ?? false);
+
   async function handleEnablePush() {
     setMessage(null);
 
@@ -162,21 +166,27 @@ export function PushNotificationButton() {
         <button
           type="button"
           className={
-            permission === "granted"
+            isActive
               ? "push-notification-card__button push-notification-card__button--active"
               : "push-notification-card__button"
           }
           disabled={isBusy}
+          aria-pressed={isActive}
+          title={
+            isActive
+              ? "Le notifiche sono attive su questo dispositivo"
+              : "Attiva le notifiche su questo dispositivo"
+          }
           onClick={handleEnablePush}
         >
           {enablePushMutation.isPending
             ? "Attivazione..."
-            : permission === "granted"
-              ? "Verifica registrazione"
+            : isActive
+              ? "Notifiche attive ✓"
               : "Attiva notifiche"}
         </button>
 
-        {permission === "granted" ? (
+        {isActive ? (
           <button
             type="button"
             className="push-notification-card__button push-notification-card__button--test"

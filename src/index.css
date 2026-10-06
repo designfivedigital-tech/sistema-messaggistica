@@ -3176,6 +3176,11 @@ z-index: 100;
   flex-wrap: wrap;
 }
 
+.push-notification-card__button--active {
+  border-color: #4663ff;
+  background: rgba(70, 99, 255, 0.14);
+}
+
 .push-notification-card__button--test {
   background: transparent;
   color: #111827;

@@ -4,6 +4,7 @@ import {
 } from "@tanstack/react-query";
 
 import {
+  ensurePushSubscription,
   getNotificationPermission,
   isPushSupported,
   registerPushNotifications,
@@ -21,11 +22,26 @@ export function usePushNotificationStatus() {
     queryKey:
       pushNotificationKeys.status(),
 
-    queryFn: async () => ({
-      supported: isPushSupported(),
-      permission:
-        getNotificationPermission(),
-    }),
+    queryFn: async () => {
+      let subscribed = false;
+
+      try {
+        subscribed =
+          await ensurePushSubscription();
+      } catch (error) {
+        console.error(
+          "Impossibile ripristinare la sottoscrizione push:",
+          error,
+        );
+      }
+
+      return {
+        supported: isPushSupported(),
+        permission:
+          getNotificationPermission(),
+        subscribed,
+      };
+    },
 
     staleTime: Infinity,
   });
