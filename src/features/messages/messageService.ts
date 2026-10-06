@@ -63,8 +63,9 @@ export async function getConversationMessages(
   ) ?? [];
 }
 
-async function notifyNewMessage(
+export async function notifyNewMessage(
   messageId: string,
+  fallbackBody?: string,
 ): Promise<void> {
   const {
     data: sessionData,
@@ -94,6 +95,7 @@ async function notifyNewMessage(
         },
         body: {
           messageId,
+          body: fallbackBody,
         },
       },
     );

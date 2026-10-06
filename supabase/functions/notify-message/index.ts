@@ -960,12 +960,20 @@ export default {
               input.badge ??
               DEFAULT_BADGE,
 
+            /*
+             * Un tag per messaggio: con lo stesso
+             * tag iOS sostituisce la notifica già
+             * presente senza suono né riaccensione
+             * dello schermo.
+             */
             tag:
               input.tag ??
               (
-                conversationId
-                  ? `conversation-${conversationId}`
-                  : "new-message"
+                messageId
+                  ? `message-${messageId}`
+                  : conversationId
+                    ? `conversation-${conversationId}`
+                    : "new-message"
               ),
 
             renotify: true,
@@ -983,10 +991,17 @@ export default {
             },
           });
 
+        /*
+         * Topic per messaggio, non per
+         * conversazione: con un topic condiviso
+         * il servizio push tiene solo l'ultima
+         * notifica in coda e la consegna come
+         * aggiornamento silenzioso.
+         */
         const topic =
           createPushTopic(
-            conversationId,
             messageId,
+            conversationId,
           );
 
         const results =

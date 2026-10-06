@@ -1,6 +1,7 @@
 import * as tus from "tus-js-client";
 
 import { supabase } from "../../lib/supabase";
+import { notifyNewMessage } from "./messageService";
 
 import type {
   ChatMessage,
@@ -372,6 +373,8 @@ export async function sendMessageWithAttachment({
         attachment.storage_path,
     );
 
+  let sentMessage: ChatMessage;
+
   try {
     const { data, error } =
       await supabase.rpc(
@@ -401,10 +404,7 @@ export async function sendMessageWithAttachment({
       );
     }
 
-    return {
-      ...(data as ChatMessage),
-      message_attachments: [],
-    };
+    sentMessage = data as ChatMessage;
   } catch (error) {
     await removeUploadedFiles(
       uploadedStoragePaths,
@@ -412,6 +412,30 @@ export async function sendMessageWithAttachment({
 
     throw error;
   }
+
+  /*
+   * Fuori dal blocco precedente: se la notifica
+   * fallisce il messaggio è comunque inviato e
+   * gli allegati non vanno rimossi.
+   */
+  try {
+    await notifyNewMessage(
+      sentMessage.id,
+      sentMessage.body?.trim()
+        ? undefined
+        : "📎 Allegato",
+    );
+  } catch (notificationError) {
+    console.error(
+      "Messaggio inviato, ma notifica push non recapitata:",
+      notificationError,
+    );
+  }
+
+  return {
+    ...sentMessage,
+    message_attachments: [],
+  };
 }
 
 export async function getAttachmentSignedUrl(
