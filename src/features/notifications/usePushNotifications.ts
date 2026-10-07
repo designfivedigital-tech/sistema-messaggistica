@@ -43,7 +43,12 @@ export function usePushNotificationStatus() {
       };
     },
 
-    staleTime: Infinity,
+    /*
+     * Ricontrolla quando l'utente torna nell'app,
+     * così un controllo fallito non lascia lo stato
+     * sbagliato per tutta la sessione.
+     */
+    staleTime: 60_000,
   });
 }
 

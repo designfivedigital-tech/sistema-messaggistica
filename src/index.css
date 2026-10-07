@@ -3088,12 +3088,19 @@ z-index: 100;
     box-shadow 150ms ease;
 }
 
-.push-notification-card__button:hover:not(:disabled) {
-  border-color: #4663ff;
-  background: #eef2ff;
-  color: #3853e8;
-  box-shadow: 0 5px 14px rgba(70, 99, 255, 0.14);
-  transform: translateY(-1px);
+/*
+ * Solo con il mouse: sui telefoni l'hover resta
+ * attivo dopo il tocco e fa sembrare accesa la
+ * campanella anche quando non lo è.
+ */
+@media (hover: hover) {
+  .push-notification-card__button:hover:not(:disabled) {
+    border-color: #4663ff;
+    background: #eef2ff;
+    color: #3853e8;
+    box-shadow: 0 5px 14px rgba(70, 99, 255, 0.14);
+    transform: translateY(-1px);
+  }
 }
 
 .push-notification-card__button:focus-visible {

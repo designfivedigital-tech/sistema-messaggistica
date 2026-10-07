@@ -253,7 +253,21 @@ export async function ensurePushSubscription(): Promise<boolean> {
   const { subscription } =
     await getOrCreateSubscription();
 
-  await savePushSubscription(subscription);
+  /*
+   * Il dispositivo è sottoscritto anche se il
+   * salvataggio fallisce (rete assente, sessione
+   * non ancora pronta): lo stato mostrato non deve
+   * dipenderne. Il salvataggio viene ritentato al
+   * controllo successivo.
+   */
+  try {
+    await savePushSubscription(subscription);
+  } catch (error) {
+    console.warn(
+      "Sottoscrizione push presente ma non salvata:",
+      error,
+    );
+  }
 
   return true;
 }
